@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Kushal Swami — IT Program Coordinator | Project Manager | NJ/NYC</title>
 <meta name="description" content="Kushal Swami is an IT Program Coordinator and Project Manager based in Clifton, NJ with 4+ years of enterprise delivery experience including a $90M POS modernization program at Ahold Delhaize. Smartsheet and SharePoint Administrator. Rutgers MIS graduate.">
 <meta name="keywords" content="Kushal Swami, IT Program Coordinator, Project Manager, PMO Analyst, Smartsheet Administrator, SharePoint Administrator, Rutgers MIS, Clifton NJ, Ahold Delhaize, program governance">
@@ -49,6 +49,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 
+html, body {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+
 :root {
   --bg: #141820;
   --surface: #1c2130;
@@ -92,7 +100,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 5%;
+  padding: 0 clamp(16px, 5vw, 80px);
   z-index: 100;
   width: 100%;
 }
@@ -318,7 +326,7 @@ nav {
 .section-inner {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 5%;
+  padding: 0 clamp(16px, 5vw, 80px);
 }
 
 .section-label {
@@ -442,7 +450,7 @@ nav {
 .timeline-header {
   text-align: center;
   margin-bottom: 52px;
-  padding: 0 5%;
+  padding: 0 clamp(16px, 5vw, 80px);
 }
 
 .legend {
@@ -482,7 +490,7 @@ nav {
   position: relative;
   max-width: 1060px;
   margin: 0 auto;
-  padding: 0 5%;
+  padding: 0 clamp(16px, 5vw, 80px);
 }
 .timeline::before {
   content: '';
@@ -646,7 +654,7 @@ nav {
   text-align: center;
   width: 100%;
 }
-.contact-inner { max-width: 640px; margin: 0 auto; padding: 0 5%; }
+.contact-inner { max-width: 640px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 80px); }
 .contact-inner .section-title { margin-bottom: 16px; }
 
 .contact-sub {
