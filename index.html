@@ -1140,3 +1140,43 @@ footer {
 <footer>
   <span>© 2026 <a href="https://kushalswami.github.io/KushalSwami/" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);transition:color 0.2s;" onmouseover="this.style.color='var(--work-accent)'" onmouseout="this.style.color='var(--muted)'">Kushal Swami</a></span>
   <span>Cl
+
+<style>
+/* iOS tap support — toggled class mirrors hover behavior */
+.card.tapped .card-details {
+  max-height: 600px;
+  opacity: 1;
+}
+.card.tapped .card-title {
+  color: #ffffff;
+}
+.card.tapped {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+</style>
+
+<script>
+// iOS doesn't trigger hover on tap — this adds tap-to-expand for touch devices
+document.addEventListener('DOMContentLoaded', function() {
+  var cards = document.querySelectorAll('.card');
+  cards.forEach(function(card) {
+    // Skip edu cards — they're always expanded
+    if (card.classList.contains('edu')) return;
+    card.addEventListener('click', function(e) {
+      // Toggle tapped state on this card
+      var isOpen = card.classList.contains('tapped');
+      // Close all other cards first
+      cards.forEach(function(c) { c.classList.remove('tapped'); });
+      // Toggle this one
+      if (!isOpen) card.classList.add('tapped');
+    });
+  });
+  // Tap outside any card to close
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.card')) {
+      cards.forEach(function(c) { c.classList.remove('tapped'); });
+    }
+  });
+});
+</script>
