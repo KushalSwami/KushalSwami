@@ -14,6 +14,9 @@
 <meta property="og:type" content="profile">
 <meta property="og:url" content="https://kushalswami.github.io/KushalSwami/">
 <!-- Canonical -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
+<link rel="alternate icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
 <link rel="canonical" href="https://kushalswami.github.io/KushalSwami/">
 <!-- Schema.org structured data -->
 <script type="application/ld+json">
@@ -613,27 +616,68 @@ nav {
 }
 
 .card-details {
-  max-height: 0;
+  max-height: 52px;
   overflow: hidden;
-  transition: max-height 0.35s ease, opacity 0.3s ease;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+  opacity: 1;
+  position: relative;
+}
+
+/* Fade mask — sits over the peeking text */
+.card-details::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, transparent, var(--surface));
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* On hover: expand fully and fade out the mask */
+.card:hover .card-details {
+  max-height: 600px;
+  opacity: 1;
+}
+.card:hover .card-details::after {
   opacity: 0;
 }
-.card:hover .card-details { max-height: 600px; opacity: 1; }
-.card.edu .card-details   { max-height: 600px; opacity: 1; }
+
+/* Tapped (iOS) — same as hover */
+/* tapped details handled in main CSS */
+.card.tapped .card-details::after {
+  opacity: 0;
+}
+
+/* Education cards always fully expanded, no fade */
+.card.edu .card-details {
+  max-height: 600px;
+  opacity: 1;
+}
+.card.edu .card-details::after {
+  display: none;
+}
 
 .card-details ul { list-style: none; padding: 0; }
 .card-details ul li {
-  padding: 3px 0 3px 14px;
+  padding: 3px 0 3px 22px;
   position: relative;
   line-height: 1.7;
   color: #3c3830;
   font-size: 12px;
+  list-style: none;
 }
 .card-details ul li::before {
-  content: '—';
+  content: '';
   position: absolute;
   left: 0;
-  color: var(--border);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Crect x='3' y='0.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 4.75 2.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='7' y='0.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 8.75 2.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='3' y='4.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 4.75 6.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='7' y='4.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 8.75 6.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 .card-tag {
@@ -1152,10 +1196,7 @@ footer {
 
 <style>
 /* iOS tap support — toggled class mirrors hover behavior */
-.card.tapped .card-details {
-  max-height: 600px;
-  opacity: 1;
-}
+/* tapped details handled in main CSS */
 .card.tapped .card-title {
   color: #000000;
 }
