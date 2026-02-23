@@ -58,20 +58,20 @@ html, body {
 }
 
 :root {
-  --bg: #141820;
-  --surface: #1c2130;
-  --surface2: #161b28;
-  --border: #2a2f3d;
-  --line: #2a2f3d;
-  --text: #dde2ec;
-  --muted: #5a6070;
-  --work-accent: #4e9e7a;
-  --work-light: #1a2e25;
-  --edu-accent: #7a6eb8;
-  --edu-light: #1e1a30;
-  --vol-accent: #c8a44a;
-  --vol-light: #2a2010;
-  --hover-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --bg: #f4f0ea;
+  --surface: #ebe6de;
+  --surface2: #e4dfd6;
+  --border: #cdc8be;
+  --line: #cdc8be;
+  --text: #1c1a16;
+  --muted: #8a8278;
+  --work-accent: #2e7048;
+  --work-light: #d0e4d8;
+  --edu-accent: #3d6b9e;
+  --edu-light: #d0dcea;
+  --vol-accent: #8b5e3c;
+  --vol-light: #ead8c8;
+  --hover-shadow: 0 8px 32px rgba(0,0,0,0.12);
   --nav-height: 64px;
   --max-width: 1200px;
 }
@@ -94,8 +94,8 @@ nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: var(--nav-height);
-  background: rgba(20,24,32,0.94);
-  backdrop-filter: blur(12px);
+  background: rgba(244,240,234,0.96);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -123,7 +123,7 @@ nav {
 }
 
 .nav-links a {
-  color: var(--muted);
+  color: #8a8278;
   text-decoration: none;
   font-size: 12px;
   letter-spacing: 1.5px;
@@ -169,7 +169,7 @@ nav {
     linear-gradient(var(--border) 1px, transparent 1px),
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
   background-size: 60px 60px;
-  opacity: 0.25;
+  opacity: 0.4;
   pointer-events: none;
 }
 
@@ -179,7 +179,7 @@ nav {
   top: 40%; left: 50%;
   transform: translate(-50%, -50%);
   width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(78,158,122,0.07) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(46,112,72,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -209,7 +209,7 @@ nav {
   font-size: 13px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #8a8278;
   margin-bottom: 40px;
   animation: fadeUp 0.8s 0.2s ease both;
   position: relative; z-index: 1;
@@ -220,7 +220,7 @@ nav {
   font-size: clamp(19px, 2.5vw, 27px);
   font-weight: 300;
   font-style: italic;
-  color: #8a9ab8;
+  color: #3c3830;
   max-width: 660px;
   margin-bottom: 52px;
   animation: fadeUp 0.8s 0.3s ease both;
@@ -323,7 +323,7 @@ nav {
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #8a8278;
 }
 
 /* ── SECTION SHARED ── */
@@ -384,7 +384,7 @@ nav {
 .highlight-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--hover-shadow);
-  border-color: #3a4050;
+  border-color: #a0988e;
 }
 
 .highlight-icon { font-size: 26px; margin-bottom: 18px; }
@@ -398,7 +398,7 @@ nav {
   line-height: 1.2;
 }
 .highlight-desc {
-  color: #8a9ab8;
+  color: #3c3830;
   font-size: 12px;
   line-height: 1.8;
 }
@@ -434,7 +434,7 @@ nav {
 .skill-tag {
   background: var(--bg);
   border: 1px solid var(--border);
-  color: #8a9ab8;
+  color: #3c3830;
   font-size: 12px;
   padding: 6px 14px;
   border-radius: 4px;
@@ -469,7 +469,7 @@ nav {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--muted);
+  color: #8a8278;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -483,7 +483,7 @@ nav {
 
 .hover-hint {
   text-align: center;
-  color: var(--muted);
+  color: #8a8278;
   font-size: 11px;
   letter-spacing: 1px;
   margin-bottom: 36px;
@@ -538,7 +538,7 @@ nav {
 }
 
 .card {
-  background: #1c2130;
+  background: #ebe6de;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 18px 20px;
@@ -600,12 +600,12 @@ nav {
   color: var(--text);
   transition: color 0.2s ease;
 }
-.card:hover .card-title { color: #ffffff; }
+.card:hover .card-title { color: #000000; }
 
-.card-org   { font-size: 12px; color: #8a9ab8; margin-bottom: 8px; }
+.card-org   { font-size: 12px; color: #3c3830; margin-bottom: 8px; }
 .card-dates {
   font-size: 11px;
-  color: #8a9ab8;
+  color: #3c3830;
   letter-spacing: 1px;
   margin-bottom: 10px;
   padding-bottom: 10px;
@@ -626,7 +626,7 @@ nav {
   padding: 3px 0 3px 14px;
   position: relative;
   line-height: 1.7;
-  color: #b8c4d4;
+  color: #3c3830;
   font-size: 12px;
 }
 .card-details ul li::before {
@@ -662,7 +662,7 @@ nav {
 .contact-inner .section-title { margin-bottom: 16px; }
 
 .contact-sub {
-  color: #8a9ab8;
+  color: #3c3830;
   font-size: 13px;
   margin-bottom: 52px;
   line-height: 1.9;
@@ -679,7 +679,7 @@ nav {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
   text-decoration: none;
@@ -714,7 +714,7 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--muted);
+  color: #8a8278;
   font-size: 11px;
   letter-spacing: 1px;
   width: 100%;
@@ -1130,10 +1130,8 @@ footer {
     <h2 class="section-title">Let's Connect</h2>
     <p class="contact-sub">Open to IT Program Coordinator, Project Manager, PMO Analyst, and Senior Project Coordinator opportunities — remote, hybrid, or onsite with relocation.</p>
     <div class="contact-links">
-      <a href="/cdn-cgi/l/email-protection#7b30080c1a1612424d3b140e0f1714141055181416" class="contact-link">✉ Email</a>
-      <a href="https://linkedin.com/in/kushalswami" target="_blank" rel="noopener" class="contact-link">⟶ LinkedIn</a>
+<a href="https://linkedin.com/in/kushalswami" target="_blank" rel="noopener" class="contact-link">⟶ LinkedIn</a>
     </div>
-    <a href="/cdn-cgi/l/email-protection#5d162e2a3c3034646b1d32282931323236733e3230" class="contact-email"><span class="__cf_email__" data-cfemail="4b00383c2a2622727d0b243e3f2724242065282426">[email&#160;protected]</span></a>
   </div>
 </section>
 
@@ -1148,7 +1146,7 @@ footer {
   opacity: 1;
 }
 .card.tapped .card-title {
-  color: #ffffff;
+  color: #000000;
 }
 .card.tapped {
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
