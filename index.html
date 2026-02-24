@@ -225,7 +225,7 @@ nav {
   font-style: italic;
   color: #3c3830;
   max-width: 660px;
-  margin-bottom: 52px;
+  margin-bottom: 32px;
   animation: fadeUp 0.8s 0.3s ease both;
   line-height: 1.5;
   position: relative; z-index: 1;
@@ -668,16 +668,14 @@ nav {
   list-style: none;
 }
 .card-details ul li::before {
-  content: '';
+  content: '⬧⬧';
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Crect x='3' y='0.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 4.75 2.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='7' y='0.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 8.75 2.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='3' y='4.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 4.75 6.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3Crect x='7' y='4.5' width='3.5' height='3.5' rx='0.3' transform='rotate(45 8.75 6.25)' fill='none' stroke='%232e7048' stroke-width='1'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: contain;
+  top: 9px;
+  color: #2e7048;
+  font-size: 8px;
+  letter-spacing: -1px;
+  line-height: 1;
 }
 
 .card-tag {
@@ -932,7 +930,7 @@ footer {
       <div class="legend-item"><div class="legend-dot edu"></div> Education</div>
       <div class="legend-item"><div class="legend-dot vol"></div> Volunteer / Other</div>
     </div>
-    <p class="hover-hint">↓ Hover over any card to expand details</p>
+    <p class="hover-hint">↓ Hover to expand &nbsp;·&nbsp; Click to lock open</p>
   </div>
   <div class="timeline">
 
@@ -1201,31 +1199,70 @@ footer {
   color: #000000;
 }
 .card.tapped {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   transform: translateY(-2px);
+}
+.card.locked {
+  border-left-width: 3px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+.card.work.locked  { border-color: var(--work-accent) !important; box-shadow: 0 8px 32px rgba(46,112,72,0.15); }
+.card.edu.locked   { border-color: var(--edu-accent)  !important; box-shadow: 0 8px 32px rgba(61,107,158,0.15); }
+.card.vol.locked   { border-color: var(--vol-accent)  !important; box-shadow: 0 8px 32px rgba(139,94,60,0.15); }
+.card.locked .card-details {
+  max-height: 600px !important;
+  opacity: 1 !important;
+}
+.card.locked .card-details::after {
+  opacity: 0 !important;
+}
+.card.locked .card-title {
+  color: #000000;
 }
 </style>
 
 <script>
-// iOS doesn't trigger hover on tap — this adds tap-to-expand for touch devices
+// Card expand: hover to preview, click to lock open, click again or click outside to unlock
 document.addEventListener('DOMContentLoaded', function() {
   var cards = document.querySelectorAll('.card');
+
   cards.forEach(function(card) {
-    // Skip edu cards — they're always expanded
     if (card.classList.contains('edu')) return;
+
+    // Hover — only affects non-locked cards
+    card.addEventListener('mouseenter', function() {
+      if (!card.classList.contains('locked')) {
+        card.classList.add('tapped');
+      }
+    });
+    card.addEventListener('mouseleave', function() {
+      if (!card.classList.contains('locked')) {
+        card.classList.remove('tapped');
+      }
+    });
+
+    // Click — toggle lock
     card.addEventListener('click', function(e) {
-      // Toggle tapped state on this card
-      var isOpen = card.classList.contains('tapped');
-      // Close all other cards first
-      cards.forEach(function(c) { c.classList.remove('tapped'); });
-      // Toggle this one
-      if (!isOpen) card.classList.add('tapped');
+      e.stopPropagation();
+      if (card.classList.contains('locked')) {
+        // Already locked — unlock and collapse
+        card.classList.remove('locked', 'tapped');
+      } else {
+        // Lock this card — unlock any other locked card first
+        cards.forEach(function(c) {
+          if (c !== card) c.classList.remove('locked', 'tapped');
+        });
+        card.classList.add('locked', 'tapped');
+      }
     });
   });
-  // Tap outside any card to close
+
+  // Click anywhere outside cards — unlock all
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.card')) {
-      cards.forEach(function(c) { c.classList.remove('tapped'); });
+      cards.forEach(function(c) {
+        c.classList.remove('locked', 'tapped');
+      });
     }
   });
 });
