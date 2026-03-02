@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f4f0ea;
+  --surface: #ebe6de;
+  --surface2: #e4dfd6;
+  --border: #cdc8be;
+  --text: #1c1a16;
+  --t2: #3c3830;
+  --t3: #8a8278;
+  --green: #2e7048;
+  --green-light: #d0e4d8;
+  --blue: #3d6b9e;
+  --blue-light: #d0dcea;
+  --red: #c0392b;
+  --red-light: #f5d5d2;
+  --amber: #c8860a;
+  --amber-light: #faecd0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(244,240,234,0.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 clamp(16px, 5vw, 80px);
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 300;
+  color: var(--text); text-decoration: none;
+}
+.nav-links { display: flex; gap: 24px; }
+.nav-links a {
+  font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--t3); text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--green); }
+
+/* ── HERO ── */
+.hero {
+  padding: clamp(48px, 8vw, 96px) clamp(16px, 5vw, 80px) 48px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-label {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--green); margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(36px, 5vw, 64px); font-weight: 300;
+  color: var(--text); line-height: 1.1; margin-bottom: 12px;
+}
+.hero-sub {
+  font-size: 13px; color: var(--t3);
+  max-width: 560px; line-height: 1.8;
+}
+
+/* ── MODE TOGGLE ── */
+.mode-bar {
+  padding: 20px clamp(16px, 5vw, 80px);
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.mode-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--t3); }
+.mode-toggle {
+  display: flex; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+}
+.mode-btn {
+  padding: 8px 20px; font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  background: none; border: none; cursor: pointer;
+  color: var(--t3); transition: all 0.2s;
+}
+.mode-btn.active { background: var(--green); color: #f4f0ea; }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: grid;
+  grid-template-columns: 380px minmax(0, 1fr);
+  gap: 0;
+  min-height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL — ENTRY ── */
+.entry-panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 24px;
+  overflow-y: auto;
+}
+.panel-title {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Summary cards */
+.summary-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px;
+}
+.summary-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 14px;
+}
+.summary-card.income { border-left: 3px solid var(--green); }
+.summary-card.expenses { border-left: 3px solid var(--red); }
+.summary-card.savings { border-left: 3px solid var(--blue); }
+.summary-card.rate { border-left: 3px solid var(--amber); }
+.sc-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--t3); margin-bottom: 4px; }
+.sc-value { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--text); }
+.sc-value.positive { color: var(--green); }
+.sc-value.negative { color: var(--red); }
+
+/* Income section */
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; margin-top: 20px;
+}
+.section-name {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text);
+}
+.add-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 4px;
+  background: var(--green-light); color: var(--green);
+  border: 1px solid var(--green); cursor: pointer;
+  transition: all 0.2s;
+}
+.add-btn:hover { background: var(--green); color: #f4f0ea; }
+
+/* Item rows */
+.item-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 5px; padding: 8px 10px; margin-bottom: 6px;
+  animation: slideIn 0.2s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+.item-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.item-name {
+  flex: 1; font-family: 'DM Mono', monospace; font-size: 11px;
+  background: none; border: none; color: var(--text);
+  outline: none; min-width: 0;
+}
+.item-name::placeholder { color: var(--t3); }
+.item-amount {
+  width: 90px; font-family: 'DM Mono', monospace; font-size: 11px;
+  background: none; border: none; border-left: 1px solid var(--border);
+  color: var(--text); outline: none; padding-left: 8px; text-align: right;
+}
+.item-amount::placeholder { color: var(--t3); }
+.delete-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--t3); font-size: 14px; line-height: 1;
+  padding: 0 2px; transition: color 0.2s; flex-shrink: 0;
+}
+.delete-btn:hover { color: var(--red); }
+
+/* Category dividers */
+.category-block { margin-bottom: 16px; }
+.cat-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px; border-radius: 4px; margin-bottom: 6px;
+  cursor: pointer;
+}
+.cat-name { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; }
+.cat-total { font-size: 11px; font-weight: 500; }
+
+/* ── RIGHT PANEL — CHARTS ── */
+.charts-panel {
+  padding: 28px clamp(16px, 3vw, 32px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg);
+  min-width: 0;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+  width: 100%;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px;
+  min-width: 0;
+  overflow: hidden;
+}
+.chart-card.full { grid-column: 1 / -1; }
+.chart-title {
+  font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--green); margin-bottom: 16px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border);
+}
+.chart-wrap { position: relative; width: 100%; }
+canvas { max-width: 100%; }
+
+/* Insight bar */
+.insights {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px;
+}
+.insight-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 18px;
+}
+.insight-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+.insight-value { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+.insight-sub { font-size: 10px; color: var(--t3); margin-top: 4px; }
+
+/* Empty state */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 200px; color: var(--t3); gap: 8px;
+}
+.empty-state .icon { font-size: 32px; opacity: 0.4; }
+.empty-state p { font-size: 11px; letter-spacing: 1px; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  .entry-panel { border-right: none; border-bottom: 1px solid var(--border); }
+  .insights { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .summary-row { grid-template-columns: 1fr 1fr; }
+  .insights { grid-template-columns: 1fr; }
+}
+
+/* ── TOOLTIPS ── */
+.summary-card { position: relative; cursor: default; }
+
+.tooltip {
+  visibility: hidden; opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%; transform: translateX(-50%);
+  width: 220px;
+  background: #1c1a16;
+  border-radius: 8px;
+  padding: 12px 14px;
+  z-index: 200;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  transform: translateX(-50%) translateY(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.summary-card:hover .tooltip {
+  visibility: visible; opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Arrow */
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1c1a16;
+}
+
+.tt-desc {
+  font-size: 10px; color: #cdc8be;
+  line-height: 1.6; margin-bottom: 10px;
+  font-family: 'DM Mono', monospace;
+}
+.tt-formula {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; flex-wrap: wrap;
+}
+.tt-piece {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  padding: 3px 8px; border-radius: 4px;
+  font-weight: 500; white-space: nowrap;
+}
+.tt-piece.income  { background: rgba(46,112,72,0.3);  color: #7ec89a; }
+.tt-piece.expense { background: rgba(192,57,43,0.3);  color: #e8907e; }
+.tt-piece.net     { background: rgba(61,107,158,0.3); color: #8ab4e0; }
+.tt-piece.rate    { background: rgba(200,134,10,0.3); color: #f0c060; }
+.tt-piece.result  { background: rgba(255,255,255,0.08); color: #f4f0ea; }
+.tt-op { color: #6e8098; font-size: 13px; font-weight: 300; }
+
+
+/* Tooltip that opens downward (for cards near top of viewport) */
+.summary-card.income .tooltip,
+.summary-card.expenses .tooltip {
+  bottom: auto;
+  top: calc(100% + 10px);
+  transform: translateX(-50%) translateY(-4px);
+}
+.summary-card.income:hover .tooltip,
+.summary-card.expenses:hover .tooltip {
+  transform: translateX(-50%) translateY(0);
+}
+.summary-card.income .tooltip::after,
+.summary-card.expenses .tooltip::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: #1c1a16;
+}
+
+
+.nav-back {
+  color: var(--green) !important;
+  border: 1px solid var(--green);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 10px !important;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.nav-back:hover {
+  background: var(--green);
+  color: var(--bg) !important;
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Kushal Swami</a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-back">← Back to Site</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <p class="hero-label">Financial Overview</p>
+  <h1>Budget Visualizer</h1>
+  <p class="hero-sub">Enter your income and expenses below. Charts update in real time — works for personal budgets and business P&L alike.</p>
+  <p style="margin-top:10px;font-size:11px;color:var(--green);letter-spacing:0.5px;">✓ All data automatically saved — hit the Reset button on the right for a new session.</p>
+</div>
+
+<div class="mode-bar">
+  <span class="mode-label">Mode</span>
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('personal')">Personal</button>
+    <button class="mode-btn" onclick="setMode('business')">Business</button>
+  </div>
+  <span id="mode-hint" style="font-size:10px;color:var(--t3);margin-left:12px;">Housing · Transport · Food · Lifestyle</span>
+  <button onclick="clearData()" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:4px;background:none;border:1px solid var(--border);color:var(--t3);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--t3)'">↺ Reset</button>
+</div>
+
+<div class="main">
+
+  <!-- LEFT: ENTRY -->
+  <div class="entry-panel" id="entry">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">Data Entry<span id="save-status" style="font-size:9px;letter-spacing:1px;color:var(--t3);font-weight:normal;"></span></div>
+
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="summary-card income">
+      <div class="tooltip"><div class="tt-desc" id="tt-income-desc">All money earned or received — wages, freelance, investments, or any other inflow.</div><div class="tt-formula"><span class="tt-piece income">Source 1</span><span class="tt-op">+</span><span class="tt-piece income">Source 2</span><span class="tt-op">···</span><span class="tt-op">=</span><span class="tt-piece result">Income</span></div></div>
+        <div class="sc-label" id="lbl-income">Income</div>
+        <div class="sc-value positive" id="total-income">$0</div>
+      </div>
+      <div class="summary-card expenses">
+      <div class="tooltip"><div class="tt-desc" id="tt-expense-desc">All money paid out — bills, purchases, costs, or any other outflow.</div><div class="tt-formula"><span class="tt-piece expense">Cat 1</span><span class="tt-op">+</span><span class="tt-piece expense">Cat 2</span><span class="tt-op">···</span><span class="tt-op">=</span><span class="tt-piece result">Expenses</span></div></div>
+        <div class="sc-label" id="lbl-expenses">Expenses</div>
+        <div class="sc-value negative" id="total-expenses">$0</div>
+      </div>
+      <div class="summary-card savings">
+      <div class="tooltip"><div class="tt-desc" id="tt-net-desc">Money left over after covering all expenses. Positive means a surplus; negative means a deficit.</div><div class="tt-formula"><span class="tt-piece income">Income</span><span class="tt-op">−</span><span class="tt-piece expense">Expenses</span><span class="tt-op">=</span><span class="tt-piece net">Net</span></div></div>
+        <div class="sc-label" id="lbl-net">Net</div>
+        <div class="sc-value" id="total-net">$0</div>
+      </div>
+      <div class="summary-card rate">
+      <div class="tooltip"><div class="tt-desc">The percentage of income you keep after covering all expenses.</div><div class="tt-formula"><span class="tt-piece net">Net</span><span class="tt-op">÷</span><span class="tt-piece income">Income</span><span class="tt-op">×</span><span class="tt-piece result">100</span><span class="tt-op">=</span><span class="tt-piece rate">Rate %</span></div></div>
+        <div class="sc-label">Savings Rate</div>
+        <div class="sc-value" id="savings-rate">0%</div>
+      </div>
+    </div>
+
+    <!-- Income section -->
+    <div class="section-header">
+      <span class="section-name" id="income-section-name">Income</span>
+      <button class="add-btn" onclick="addItem('income')">+ Add</button>
+    </div>
+    <div id="income-items"></div>
+
+    <!-- Expense categories -->
+    <div class="section-header" style="margin-top:24px;">
+      <span class="section-name" id="expense-section-name">Expenses</span>
+      <button class="add-btn" onclick="addCategory()">+ Category</button>
+    </div>
+    <div id="expense-categories"></div>
+
+  </div>
+
+  <!-- RIGHT: CHARTS -->
+  <div class="charts-panel" id="charts">
+
+    <div class="insights">
+      <div class="insight-card">
+        <div class="insight-label">Largest Expense</div>
+        <div class="insight-value" id="insight-largest">—</div>
+        <div class="insight-sub" id="insight-largest-cat">Add expenses to see insights</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label">Monthly Surplus</div>
+        <div class="insight-value" id="insight-surplus">$0</div>
+        <div class="insight-sub" id="insight-surplus-sub">per month</div>
+      </div>
+      <div class="insight-card">
+        <div class="insight-label">Annual Projection</div>
+        <div class="insight-value" id="insight-annual">$0</div>
+        <div class="insight-sub">net × 12 months</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Expense Breakdown</div>
+        <div class="chart-wrap" style="height:220px;">
+          <canvas id="donutChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Income vs Expenses</div>
+        <div class="chart-wrap" style="height:220px;">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Category Breakdown</div>
+        <div class="chart-wrap" style="height:200px;">
+          <canvas id="horizChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────
+let mode = 'personal';
+
+const MODES = {
+  personal: {
+    income: 'Income',
+    expenses: 'Expenses',
+    net: 'Net Savings',
+    hint: 'Housing · Transport · Food · Lifestyle',
+    defaultIncome: [{ name: 'Primary Job', amount: 5000 }, { name: 'Side Income', amount: 0 }],
+    defaultCats: [
+      { name: 'Housing', color: '#2e7048', items: [{ name: 'Rent / Mortgage', amount: 1500 }] },
+      { name: 'Transport', color: '#3d6b9e', items: [{ name: 'Car Payment', amount: 400 }, { name: 'Gas', amount: 150 }] },
+      { name: 'Food', color: '#c8860a', items: [{ name: 'Groceries', amount: 300 }, { name: 'Dining Out', amount: 200 }] },
+      { name: 'Lifestyle', color: '#8b5e3c', items: [{ name: 'Subscriptions', amount: 80 }] },
+    ]
+  },
+  business: {
+    income: 'Revenue',
+    expenses: 'Operating Costs',
+    net: 'Net Profit',
+    hint: 'Payroll · Operations · Marketing · Technology',
+    defaultIncome: [{ name: 'Product Revenue', amount: 50000 }, { name: 'Service Revenue', amount: 10000 }],
+    defaultCats: [
+      { name: 'Payroll', color: '#2e7048', items: [{ name: 'Salaries', amount: 30000 }, { name: 'Benefits', amount: 5000 }] },
+      { name: 'Operations', color: '#3d6b9e', items: [{ name: 'Rent / Office', amount: 3000 }, { name: 'Utilities', amount: 500 }] },
+      { name: 'Marketing', color: '#c8860a', items: [{ name: 'Advertising', amount: 2000 }, { name: 'Content', amount: 800 }] },
+      { name: 'Technology', color: '#8b5e3c', items: [{ name: 'Software', amount: 1200 }, { name: 'Infrastructure', amount: 600 }] },
+    ]
+  }
+};
+
+let incomeItems = [];
+let categories = [];
+
+// ── CHARTS ─────────────────────────────────────────────────────────────
+let donutChart, barChart, horizChart;
+
+function initCharts() {
+  const font = { family: "'DM Mono', monospace", size: 11 };
+  Chart.defaults.font = font;
+  Chart.defaults.color = '#8a8278';
+
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 2, borderColor: '#f4f0ea' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { family: "'DM Mono', monospace", size: 10 },
+            color: '#3c3830',
+            boxWidth: 10,
+            padding: 14
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.label + ': $' + ctx.raw.toLocaleString('en-US', { maximumFractionDigits: 0 })
+          },
+          titleFont: { family: "'DM Mono', monospace", size: 10 },
+          bodyFont: { family: "'DM Mono', monospace", size: 10 },
+          backgroundColor: '#1c1a16',
+          titleColor: '#cdc8be',
+          bodyColor: '#f4f0ea',
+          padding: 10,
+          cornerRadius: 6
+        }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // Inline plugin: value labels on vertical bars (barChart only)
+  const barLabelPlugin = {
+    id: 'barLabels',
+    afterDatasetsDraw(chart) {
+      if (chart.canvas.id !== 'barChart') return;
+      const { ctx, data } = chart;
+      ctx.save();
+      data.datasets.forEach((dataset, di) => {
+        chart.getDatasetMeta(di).data.forEach((bar, i) => {
+          const val = dataset.data[i];
+          if (!val) return;
+          const label = '$' + val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+          ctx.fillStyle = '#3c3830';
+          ctx.font = "400 10.5px 'DM Mono', monospace";
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          // Clamp label so it never goes above the canvas top
+          const yPos = Math.max(bar.y - 5, 14);
+          ctx.fillText(label, bar.x, yPos);
+        });
+      });
+      ctx.restore();
+    }
+  };
+  Chart.register(barLabelPlugin);
+
+  barChart = new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Income', 'Expenses', 'Net'],
+      datasets: [{ data: [0, 0, 0], backgroundColor: ['#2e7048', '#c0392b', '#3d6b9e'], borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: false
+      },
+      layout: { padding: { top: 24 } },
+      scales: {
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => '$' + v.toLocaleString(), font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' }
+        }
+      }
+    }
+  });
+
+  horizChart = new Chart(document.getElementById('horizChart'), {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderRadius: 4 }] },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      layout: { padding: { right: 60 } },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => '$' + v.toLocaleString(), font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: '#3c3830' }
+        }
+      }
+    },
+    plugins: [{
+      id: 'horizLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx, data } = chart;
+        ctx.save();
+        data.datasets.forEach((dataset, di) => {
+          chart.getDatasetMeta(di).data.forEach((bar, i) => {
+            const val = dataset.data[i];
+            if (!val) return;
+            const label = '$' + val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            const barWidth = bar.width || (bar.x - bar.base);
+            ctx.font = "400 10px 'DM Mono', monospace";
+            const textWidth = ctx.measureText(label).width;
+            const padding = 8;
+            // If bar is wide enough, place inside near right edge; else place outside
+            if (barWidth > textWidth + padding * 2 + 20) {
+              ctx.fillStyle = '#f4f0ea';
+              ctx.textAlign = 'right';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(label, bar.x - padding, bar.y);
+            } else {
+              ctx.fillStyle = '#3c3830';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(label, bar.x + padding, bar.y);
+            }
+          });
+        });
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ── UPDATE ──────────────────────────────────────────────────────────────
+function updateAll() {
+  const totalIncome = incomeItems.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+  const catTotals = categories.map(c => ({
+    name: c.name, color: c.color,
+    total: c.items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0)
+  }));
+  const totalExpenses = catTotals.reduce((s, c) => s + c.total, 0);
+  const net = totalIncome - totalExpenses;
+  const savingsRate = totalIncome > 0 ? ((net / totalIncome) * 100).toFixed(1) : 0;
+
+  // Summary cards
+  const fmt = n => '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  document.getElementById('total-income').textContent = fmt(totalIncome);
+  document.getElementById('total-expenses').textContent = fmt(totalExpenses);
+  const netEl = document.getElementById('total-net');
+  netEl.textContent = (net < 0 ? '-' : '') + fmt(net);
+  netEl.className = 'sc-value ' + (net >= 0 ? 'positive' : 'negative');
+  const rateEl = document.getElementById('savings-rate');
+  rateEl.textContent = savingsRate + '%';
+  rateEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Insights
+  const largest = catTotals.reduce((a, b) => b.total > a.total ? b : a, { name: '—', total: 0 });
+  document.getElementById('insight-largest').textContent = largest.total > 0 ? fmt(largest.total) : '—';
+  document.getElementById('insight-largest-cat').textContent = largest.total > 0 ? largest.name : 'Add expenses to see insights';
+  document.getElementById('insight-surplus').textContent = (net < 0 ? '-' : '') + fmt(net);
+  document.getElementById('insight-surplus').style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('insight-annual').textContent = (net < 0 ? '-' : '') + fmt(net * 12);
+
+  // Donut chart
+  donutChart.data.labels = catTotals.filter(c => c.total > 0).map(c => c.name);
+  donutChart.data.datasets[0].data = catTotals.filter(c => c.total > 0).map(c => c.total);
+  donutChart.data.datasets[0].backgroundColor = catTotals.filter(c => c.total > 0).map(c => c.color);
+  donutChart.update();
+
+  // Bar chart
+  barChart.data.datasets[0].data = [totalIncome, totalExpenses, Math.max(0, net)];
+  barChart.update();
+
+  // Horizontal bar
+  horizChart.data.labels = catTotals.map(c => c.name);
+  horizChart.data.datasets[0].data = catTotals.map(c => c.total);
+  horizChart.data.datasets[0].backgroundColor = catTotals.map(c => c.color);
+  horizChart.update();
+
+  // Cat totals in UI
+  categories.forEach((cat, ci) => {
+    const el = document.getElementById('cat-total-' + ci);
+    if (el) el.textContent = '$' + (catTotals[ci]?.total || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  });
+
+  // Auto-save on every update
+  saveData();
+}
+
+// ── RENDER ──────────────────────────────────────────────────────────────
+function renderIncome() {
+  const container = document.getElementById('income-items');
+  container.innerHTML = '';
+  incomeItems.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <div class="item-dot" style="background:var(--green)"></div>
+      <input class="item-name" type="text" value="${item.name}" placeholder="Source name"
+        oninput="incomeItems[${idx}].name=this.value;updateAll()">
+      <input class="item-amount" type="number" value="${item.amount || ''}" placeholder="0"
+        oninput="incomeItems[${idx}].amount=this.value;updateAll()">
+      <button class="delete-btn" onclick="incomeItems.splice(${idx},1);renderIncome();updateAll()">×</button>`;
+    container.appendChild(row);
+  });
+}
+
+function renderCategories() {
+  const container = document.getElementById('expense-categories');
+  container.innerHTML = '';
+  categories.forEach((cat, ci) => {
+    const block = document.createElement('div');
+    block.className = 'category-block';
+
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.style.background = cat.color + '18';
+    header.style.borderLeft = `3px solid ${cat.color}`;
+    header.innerHTML = `
+      <span class="cat-name" style="color:${cat.color}">${cat.name}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="cat-total" id="cat-total-${ci}" style="color:${cat.color}">$0</span>
+        <button class="delete-btn" onclick="categories.splice(${ci},1);renderCategories();updateAll()" style="font-size:12px">×</button>
+      </div>`;
+    block.appendChild(header);
+
+    cat.items.forEach((item, ii) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <div class="item-dot" style="background:${cat.color}"></div>
+        <input class="item-name" type="text" value="${item.name}" placeholder="Item name"
+          oninput="categories[${ci}].items[${ii}].name=this.value;updateAll()">
+        <input class="item-amount" type="number" value="${item.amount || ''}" placeholder="0"
+          oninput="categories[${ci}].items[${ii}].amount=this.value;updateAll()">
+        <button class="delete-btn" onclick="categories[${ci}].items.splice(${ii},1);renderCategories();updateAll()">×</button>`;
+      block.appendChild(row);
+    });
+
+    const addItem = document.createElement('button');
+    addItem.className = 'add-btn';
+    addItem.style.marginTop = '4px';
+    addItem.style.fontSize = '9px';
+    addItem.textContent = '+ Add Item';
+    addItem.onclick = () => { cat.items.push({ name: '', amount: 0 }); renderCategories(); updateAll(); };
+    block.appendChild(addItem);
+    container.appendChild(block);
+  });
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────
+function addItem(type) {
+  incomeItems.push({ name: '', amount: 0 });
+  renderIncome(); updateAll();
+}
+
+const CAT_COLORS = ['#2e7048','#3d6b9e','#c8860a','#8b5e3c','#c0392b','#5b8a6e','#1a4a7a','#7a5c2e'];
+let catColorIdx = 0;
+
+function addCategory() {
+  const name = prompt('Category name:');
+  if (!name) return;
+  categories.push({ name, color: CAT_COLORS[catColorIdx++ % CAT_COLORS.length], items: [{ name: '', amount: 0 }] });
+  renderCategories(); updateAll();
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const cfg = MODES[m];
+  document.getElementById('mode-hint').textContent = cfg.hint;
+  document.getElementById('income-section-name').textContent = cfg.income;
+  document.getElementById('expense-section-name').textContent = cfg.expenses;
+  document.getElementById('lbl-income').textContent = cfg.income;
+  document.getElementById('lbl-expenses').textContent = cfg.expenses;
+  document.getElementById('lbl-net').textContent = cfg.net;
+
+  incomeItems = cfg.defaultIncome.map(i => ({ ...i }));
+  categories = cfg.defaultCats.map(c => ({ ...c, items: c.items.map(i => ({ ...i })) }));
+  catColorIdx = cfg.defaultCats.length;
+
+  renderIncome(); renderCategories(); updateAll();
+
+  // Update tooltip descriptions for business/personal context
+  const isB = m === 'business';
+  const incDesc = document.getElementById('tt-income-desc');
+  const expDesc = document.getElementById('tt-expense-desc');
+  const netDesc = document.getElementById('tt-net-desc');
+  if (incDesc) incDesc.textContent = isB
+    ? 'All money brought in from sales, services, or other business activities before any costs are deducted.'
+    : 'All money earned or received — wages, freelance, investments, or any other inflow.';
+  if (expDesc) expDesc.textContent = isB
+    ? 'All costs incurred to run the business — payroll, rent, tools, marketing, and any other outgoing spend.'
+    : 'All money paid out — bills, purchases, costs, or any other outflow.';
+  if (netDesc) netDesc.textContent = isB
+    ? 'Revenue minus all operating costs. Positive is profit; negative is a loss.'
+    : 'Money left over after covering all expenses. Positive means a surplus; negative means a deficit.';
+}
+
+
+// ── LOCAL STORAGE ──────────────────────────────────────────────────────
+const STORAGE_KEY = 'budget_visualizer_v1';
+
+function saveData() {
+  try {
+    const data = {
+      mode,
+      incomeItems: incomeItems.map(i => ({ ...i })),
+      categories: categories.map(c => ({
+        name: c.name,
+        color: c.color,
+        items: c.items.map(i => ({ ...i }))
+      })),
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    updateSaveStatus(data.savedAt);
+  } catch(e) {
+    console.warn('Save failed:', e);
+  }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !data.incomeItems || !data.categories) return false;
+
+    // Restore state
+    mode = data.mode || 'personal';
+    incomeItems = data.incomeItems;
+    categories = data.categories;
+
+    // Sync UI mode buttons
+    document.querySelectorAll('.mode-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.toLowerCase() === mode);
+    });
+
+    // Sync mode labels
+    const cfg = MODES[mode];
+    document.getElementById('mode-hint').textContent = cfg.hint;
+    document.getElementById('income-section-name').textContent = cfg.income;
+    document.getElementById('expense-section-name').textContent = cfg.expenses;
+    document.getElementById('lbl-income').textContent = cfg.income;
+    document.getElementById('lbl-expenses').textContent = cfg.expenses;
+    document.getElementById('lbl-net').textContent = cfg.net;
+
+    // Sync tooltip descriptions
+    const isB = mode === 'business';
+    const incDesc = document.getElementById('tt-income-desc');
+    const expDesc = document.getElementById('tt-expense-desc');
+    const netDesc = document.getElementById('tt-net-desc');
+    if (incDesc) incDesc.textContent = isB
+      ? 'All money brought in from sales, services, or other business activities before any costs are deducted.'
+      : 'All money earned or received — wages, freelance, investments, or any other inflow.';
+    if (expDesc) expDesc.textContent = isB
+      ? 'All costs incurred to run the business — payroll, rent, tools, marketing, and any other outgoing spend.'
+      : 'All money paid out — bills, purchases, costs, or any other outflow.';
+    if (netDesc) netDesc.textContent = isB
+      ? 'Revenue minus all operating costs. Positive is profit; negative is a loss.'
+      : 'Money left over after covering all expenses. Positive means a surplus; negative means a deficit.';
+
+    renderIncome();
+    renderCategories();
+    updateAll();
+    updateSaveStatus(data.savedAt);
+    return true;
+  } catch(e) {
+    console.warn('Load failed:', e);
+    return false;
+  }
+}
+
+function updateSaveStatus(isoString) {
+  const el = document.getElementById('save-status');
+  if (!el || !isoString) return;
+  const d = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  let label;
+  if (diffMins < 1) label = 'Saved just now';
+  else if (diffMins < 60) label = `Saved ${diffMins}m ago`;
+  else if (diffHrs < 24) label = `Saved ${diffHrs}h ago`;
+  else if (diffDays === 1) label = 'Saved yesterday';
+  else label = `Saved ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+  el.textContent = label;
+  el.style.color = 'var(--green)';
+  // Fade back to muted after 3s
+  clearTimeout(el._fadeTimer);
+  el._fadeTimer = setTimeout(() => { el.style.color = 'var(--t3)'; }, 3000);
+}
+
+function clearData() {
+  if (!confirm('Clear all saved data and reset to defaults?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  setMode(mode);
+  document.getElementById('save-status').textContent = 'Data cleared';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initCharts();
+  // Try to restore saved session, fall back to personal defaults
+  const restored = loadData();
+  if (!restored) setMode('personal');
+});
+</script>
+</body>
+</html>
