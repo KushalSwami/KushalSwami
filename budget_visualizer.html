@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
+<link rel="alternate icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Budget Visualizer</title>
@@ -560,14 +563,21 @@ function initCharts() {
         chart.getDatasetMeta(di).data.forEach((bar, i) => {
           const val = dataset.data[i];
           if (!val) return;
-          const label = '$' + val.toLocaleString('en-US', { maximumFractionDigits: 0 });
+          const absVal = Math.abs(val);
+          const prefix = val < 0 ? '-$' : '$';
+          const label = prefix + absVal.toLocaleString('en-US', { maximumFractionDigits: 0 });
           ctx.fillStyle = '#3c3830';
           ctx.font = "400 10.5px 'DM Mono', monospace";
           ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          // Clamp label so it never goes above the canvas top
-          const yPos = Math.max(bar.y - 5, 14);
-          ctx.fillText(label, bar.x, yPos);
+          // For negative bars, label goes below the bar; for positive, above
+          if (val < 0) {
+            ctx.textBaseline = 'top';
+            ctx.fillText(label, bar.x, bar.y + 5);
+          } else {
+            ctx.textBaseline = 'bottom';
+            const yPos = Math.max(bar.y - 5, 14);
+            ctx.fillText(label, bar.x, yPos);
+          }
         });
       });
       ctx.restore();
@@ -691,7 +701,12 @@ function updateAll() {
   donutChart.update();
 
   // Bar chart
-  barChart.data.datasets[0].data = [totalIncome, totalExpenses, Math.max(0, net)];
+  barChart.data.datasets[0].data = [totalIncome, totalExpenses, net];
+  barChart.data.datasets[0].backgroundColor = [
+    '#2e7048',
+    '#c0392b',
+    net >= 0 ? '#3d6b9e' : '#8b5e3c'
+  ];
   barChart.update();
 
   // Horizontal bar
