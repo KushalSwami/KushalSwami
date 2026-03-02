@@ -808,30 +808,48 @@ footer {
 /* ── HAMBURGER ── */
 .hamburger {
   display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
+  align-items: center;
+  gap: 8px;
   background: none;
-  border: none;
+  border: 1px solid var(--work-accent);
+  border-radius: 4px;
   cursor: pointer;
-  padding: 4px;
+  padding: 7px 14px;
+  color: var(--work-accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: all 0.2s;
   z-index: 1001;
+  margin-left: auto;
 }
-.hamburger span {
+.hamburger:hover { background: var(--work-accent); color: #f4f0ea; }
+.hamburger:hover .ham-lines span { background: #f4f0ea; }
+.hamburger-label { line-height: 1; }
+.ham-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+.ham-lines span {
   display: block;
-  width: 22px;
-  height: 2px;
-  background: var(--text);
+  width: 16px;
+  height: 1.5px;
+  background: var(--work-accent);
   border-radius: 2px;
   transition: all 0.25s ease;
   transform-origin: center;
 }
-.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.hamburger.open span:nth-child(2) { opacity: 0; }
-.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.hamburger.open { background: var(--work-accent); color: #f4f0ea; }
+.hamburger.open .ham-lines span { background: #f4f0ea; }
+.hamburger.open .ham-lines span:nth-child(1) { transform: translateY(5.5px) rotate(45deg); }
+.hamburger.open .ham-lines span:nth-child(2) { opacity: 0; }
+.hamburger.open .ham-lines span:nth-child(3) { transform: translateY(-5.5px) rotate(-45deg); }
 
 @media (max-width: 900px) {
-  .nav-links li:not(:last-child) { display: none; }
+  .nav-links li { display: none; }
   .hamburger { display: flex; }
   .nav-links.open { display: flex; flex-direction: column; position: fixed;
     top: 64px; left: 0; right: 0; background: rgba(244,240,234,0.98);
@@ -841,10 +859,25 @@ footer {
   .nav-links.open li:last-child { border-bottom: none; }
   .nav-links.open li a { padding: 14px 0; font-size: 13px; letter-spacing: 2px;
     color: var(--text); display: block; width: 100%; }
-  .nav-links.open li a.nav-cta { color: var(--work-accent); border: none;
-    padding: 14px 0; background: none; border-radius: 0; }
-  .nav-links.open li a.nav-tool { color: var(--work-accent); border: none;
-    background: none; border-radius: 0; padding: 14px 0; }
+  .nav-links.open li a.nav-cta {
+    color: var(--work-accent);
+    border: none !important;
+    padding: 14px 0;
+    background: none !important;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
+  .nav-links.open li a.nav-tool {
+    color: var(--work-accent);
+    border: none !important;
+    background: none !important;
+    border-radius: 0;
+    padding: 14px 0;
+    font-size: 13px;
+    letter-spacing: 2px;
+  }
   #stats { grid-template-columns: repeat(3, 1fr); }
   .highlights-grid { grid-template-columns: 1fr; }
   .skills-grid { grid-template-columns: 1fr; }
@@ -869,9 +902,6 @@ footer {
 
 <nav>
   <a href="#hero" class="nav-logo">Kushal Swami</a>
-  <button class="hamburger" id="hamburger" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
   <ul class="nav-links" id="nav-links">
     <li><a href="#highlights">Highlights</a></li>
     <li><a href="#skills">Skills</a></li>
@@ -879,6 +909,10 @@ footer {
     <li><a href="budget_visualizer.html" class="nav-tool">Budget Tool</a></li>
     <li><a href="#contact" class="nav-cta">Contact</a></li>
   </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span class="hamburger-label">Menu</span>
+    <div class="ham-lines"><span></span><span></span><span></span></div>
+  </button>
 </nav>
 
 <section id="hero">
