@@ -1057,8 +1057,9 @@ function addCategory() {
 
 function setMode(m) {
   mode = m;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().toLowerCase() === m.toLowerCase());
+  });
 
   const cfg = MODES[m];
   document.getElementById('mode-hint').textContent = cfg.hint;
@@ -1068,9 +1069,20 @@ function setMode(m) {
   document.getElementById('lbl-expenses').textContent = cfg.expenses;
   document.getElementById('lbl-net').textContent = cfg.net;
 
-  incomeItems = cfg.defaultIncome.map(i => ({ ...i }));
-  categories = cfg.defaultCats.map(c => ({ ...c, items: c.items.map(i => ({ ...i })) }));
-  catColorIdx = cfg.defaultCats.length;
+  // Snapshot current mode before switching
+  if (mode !== m) saveModeSnapshot(mode);
+
+  // Try to load saved data for the new mode, fall back to defaults
+  const saved = loadModeData(m);
+  if (saved) {
+    incomeItems = saved.incomeItems;
+    categories = saved.categories;
+    catColorIdx = categories.length;
+  } else {
+    incomeItems = cfg.defaultIncome.map(i => ({ ...i }));
+    categories = cfg.defaultCats.map(c => ({ ...c, items: c.items.map(i => ({ ...i })) }));
+    catColorIdx = cfg.defaultCats.length;
+  }
 
   renderIncome(); renderCategories(); updateAll();
 
@@ -1096,20 +1108,48 @@ const STORAGE_KEY = 'budget_visualizer_v1';
 
 function saveData() {
   try {
-    const data = {
-      mode,
+    const savedAt = new Date().toISOString();
+    // Save current mode's data under its own key
+    const modeData = {
       incomeItems: incomeItems.map(i => ({ ...i })),
       categories: categories.map(c => ({
-        name: c.name,
-        color: c.color,
+        name: c.name, color: c.color,
         items: c.items.map(i => ({ ...i }))
-      })),
-      savedAt: new Date().toISOString()
+      }))
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    updateSaveStatus(data.savedAt);
+    localStorage.setItem(STORAGE_KEY + '_' + mode, JSON.stringify(modeData));
+    // Save last active mode + timestamp in the main key
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mode, savedAt }));
+    updateSaveStatus(savedAt);
   } catch(e) {
     console.warn('Save failed:', e);
+  }
+}
+
+function saveModeSnapshot(m) {
+  // Snapshot a specific mode's current data without triggering updateAll
+  try {
+    const modeData = {
+      incomeItems: incomeItems.map(i => ({ ...i })),
+      categories: categories.map(c => ({
+        name: c.name, color: c.color,
+        items: c.items.map(i => ({ ...i }))
+      }))
+    };
+    localStorage.setItem(STORAGE_KEY + '_' + m, JSON.stringify(modeData));
+  } catch(e) {}
+}
+
+function loadModeData(m) {
+  // Load saved data for a given mode, fall back to defaults
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY + '_' + m);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !data.incomeItems || !data.categories) return null;
+    return data;
+  } catch(e) {
+    return null;
   }
 }
 
@@ -1117,13 +1157,17 @@ function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
-    const data = JSON.parse(raw);
-    if (!data || !data.incomeItems || !data.categories) return false;
+    const meta = JSON.parse(raw);
+    if (!meta) return false;
 
-    // Restore state
-    mode = data.mode || 'personal';
-    incomeItems = data.incomeItems;
-    categories = data.categories;
+    // Restore last active mode
+    mode = meta.mode || 'personal';
+
+    // Load that mode's saved data
+    const modeData = loadModeData(mode);
+    if (!modeData) return false;
+    incomeItems = modeData.incomeItems;
+    categories = modeData.categories;
 
     // Sync UI mode buttons
     document.querySelectorAll('.mode-btn').forEach(b => {
@@ -1157,7 +1201,7 @@ function loadData() {
     renderIncome();
     renderCategories();
     updateAll();
-    updateSaveStatus(data.savedAt);
+    updateSaveStatus(meta.savedAt);
     return true;
   } catch(e) {
     console.warn('Load failed:', e);
@@ -1192,6 +1236,8 @@ function updateSaveStatus(isoString) {
 function clearData() {
   if (!confirm('Clear all saved data and reset to defaults?')) return;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_KEY + '_personal');
+  localStorage.removeItem(STORAGE_KEY + '_business');
   setMode(mode);
   document.getElementById('save-status').textContent = 'Data cleared';
 }
