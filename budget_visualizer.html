@@ -231,6 +231,7 @@ canvas { max-width: 100%; }
 /* Insight bar */
 .insights {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px;
+  grid-auto-rows: auto;
 }
 .insight-card {
   background: var(--surface); border: 1px solid var(--border);
@@ -450,6 +451,11 @@ canvas { max-width: 100%; }
         <div class="insight-value" id="insight-annual">$0</div>
         <div class="insight-sub">net × 12 months</div>
       </div>
+      <div class="insight-card" style="grid-column: 1 / -1; border-left: 3px solid var(--blue);">
+        <div class="insight-label" id="runway-insight-label">12-Month Outlook</div>
+        <div class="insight-value" id="insight-runway" style="font-size:18px;">—</div>
+        <div class="insight-sub" id="insight-runway-sub">Enter data to see projection</div>
+      </div>
     </div>
 
     <div class="charts-grid">
@@ -469,6 +475,20 @@ canvas { max-width: 100%; }
         <div class="chart-title">Category Breakdown</div>
         <div class="chart-wrap" style="height:200px;">
           <canvas id="horizChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">Savings Waterfall</div>
+        <div class="chart-title-sub" id="waterfall-sub" style="font-size:10px;color:var(--t3);margin-top:-10px;margin-bottom:14px;letter-spacing:0.5px;">How your income flows into net savings, step by step</div>
+        <div class="chart-wrap" style="height:260px;">
+          <canvas id="waterfallChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card full">
+        <div class="chart-title">12-Month Runway Projection</div>
+        <div class="chart-title-sub" id="runway-sub" style="font-size:10px;color:var(--t3);margin-top:-10px;margin-bottom:14px;letter-spacing:0.5px;">Projected balance over the next 12 months at current net</div>
+        <div class="chart-wrap" style="height:240px;">
+          <canvas id="runwayChart"></canvas>
         </div>
       </div>
     </div>
@@ -513,7 +533,7 @@ let incomeItems = [];
 let categories = [];
 
 // ── CHARTS ─────────────────────────────────────────────────────────────
-let donutChart, barChart, horizChart;
+let donutChart, barChart, horizChart, waterfallChart, runwayChart;
 
 function initCharts() {
   const font = { family: "'DM Mono', monospace", size: 11 };
@@ -552,6 +572,125 @@ function initCharts() {
     }
   });
 
+  // ── Waterfall Chart ──
+  waterfallChart = new Chart(document.getElementById('waterfallChart'), {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label: 'Value', data: [], backgroundColor: [], borderRadius: 4, borderSkipped: false, borderWidth: 0 },
+      { label: 'Base', data: [], backgroundColor: 'transparent', borderWidth: 0, borderSkipped: false }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 28 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex === 1) return null;
+              const val = ctx.raw;
+              return (val < 0 ? '-$' : '$') + Math.abs(val).toLocaleString('en-US', { maximumFractionDigits: 0 });
+            }
+          },
+          titleFont: { family: "'DM Mono', monospace", size: 10 },
+          bodyFont: { family: "'DM Mono', monospace", size: 10 },
+          backgroundColor: '#1c1a16', titleColor: '#cdc8be', bodyColor: '#f4f0ea',
+          padding: 10, cornerRadius: 6
+        }
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' } },
+        y: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => '$' + v.toLocaleString(), font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' }
+        }
+      }
+    },
+    plugins: [{
+      id: 'waterfallLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx, data } = chart;
+        if (!data.datasets[0]) return;
+        ctx.save();
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const val = data.datasets[0].data[i];
+          if (val === undefined || val === null || val === 0) return;
+          const isExpense = i > 0 && i < data.labels.length - 1;
+          const absVal = Math.abs(val);
+          const label = (isExpense ? '-$' : '$') + absVal.toLocaleString('en-US', { maximumFractionDigits: 0 });
+          ctx.fillStyle = '#3c3830';
+          ctx.font = "500 10px 'DM Mono', monospace";
+          ctx.textAlign = 'center';
+          // Always place label above the topmost point of the bar
+          // For stacked bars: bar.y is top of value bar, but for negatives that's BELOW base
+          // Use Math.min(bar.y, bar.base ?? bar.y) to always get the highest visual point
+          const topY = bar.base !== undefined ? Math.min(bar.y, bar.base) : bar.y;
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(label, bar.x, topY - 5);
+        });
+        ctx.restore();
+      }
+    }]
+  });
+
+  // ── Runway Projection Chart ──
+  runwayChart = new Chart(document.getElementById('runwayChart'), {
+    type: 'line',
+    data: { labels: [], datasets: [
+      {
+        label: 'Projected Balance',
+        data: [],
+        borderColor: '#2e7048',
+        backgroundColor: 'rgba(46,112,72,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: '#2e7048',
+        pointBorderColor: '#f4f0ea',
+        pointBorderWidth: 2,
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'Break-Even',
+        data: [],
+        borderColor: 'rgba(192,57,43,0.4)',
+        borderWidth: 1.5,
+        borderDash: [6, 4],
+        pointRadius: 0,
+        fill: false,
+        tension: 0
+      }
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
+      plugins: {
+        legend: {
+          display: true, position: 'top', align: 'end',
+          labels: { font: { family: "'DM Mono', monospace", size: 9 }, color: '#8a8278', boxWidth: 20, padding: 16 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const val = ctx.raw;
+              return ' ' + ctx.dataset.label + ': ' + (val < 0 ? '-$' : '$') + Math.abs(val).toLocaleString('en-US', { maximumFractionDigits: 0 });
+            }
+          },
+          titleFont: { family: "'DM Mono', monospace", size: 10 },
+          bodyFont: { family: "'DM Mono', monospace", size: 10 },
+          backgroundColor: '#1c1a16', titleColor: '#cdc8be', bodyColor: '#f4f0ea',
+          padding: 10, cornerRadius: 6
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: "'DM Mono', monospace", size: 9 }, color: '#8a8278' } },
+        y: { grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => (v < 0 ? '-$' : '$') + Math.abs(v).toLocaleString(), font: { family: "'DM Mono', monospace", size: 9 }, color: '#8a8278' }
+        }
+      },
+      interaction: { mode: 'index', intersect: false }
+    }
+  });
+
   // Inline plugin: value labels on vertical bars (barChart only)
   const barLabelPlugin = {
     id: 'barLabels',
@@ -569,15 +708,11 @@ function initCharts() {
           ctx.fillStyle = '#3c3830';
           ctx.font = "400 10.5px 'DM Mono', monospace";
           ctx.textAlign = 'center';
-          // For negative bars, label goes below the bar; for positive, above
-          if (val < 0) {
-            ctx.textBaseline = 'top';
-            ctx.fillText(label, bar.x, bar.y + 5);
-          } else {
-            ctx.textBaseline = 'bottom';
-            const yPos = Math.max(bar.y - 5, 14);
-            ctx.fillText(label, bar.x, yPos);
-          }
+          ctx.textBaseline = 'bottom';
+          // For negative bars: label sits above the zero line (bar.base)
+          // For positive bars: label sits above the bar top (bar.y)
+          const yPos = val < 0 ? bar.base - 5 : bar.y - 5;
+          ctx.fillText(label, bar.x, yPos);
         });
       });
       ctx.restore();
@@ -597,7 +732,7 @@ function initCharts() {
         legend: { display: false },
         datalabels: false
       },
-      layout: { padding: { top: 24 } },
+      layout: { padding: { top: 40, left: 8, right: 8 } },
       scales: {
         y: {
           grid: { color: 'rgba(0,0,0,0.05)' },
@@ -680,7 +815,8 @@ function updateAll() {
   document.getElementById('total-income').textContent = fmt(totalIncome);
   document.getElementById('total-expenses').textContent = fmt(totalExpenses);
   const netEl = document.getElementById('total-net');
-  netEl.textContent = (net < 0 ? '-' : '') + fmt(net);
+  const netDisplay = net === 0 ? '$0' : (net < 0 ? '-' : '') + fmt(net);
+  netEl.textContent = netDisplay;
   netEl.className = 'sc-value ' + (net >= 0 ? 'positive' : 'negative');
   const rateEl = document.getElementById('savings-rate');
   rateEl.textContent = savingsRate + '%';
@@ -714,6 +850,123 @@ function updateAll() {
   horizChart.data.datasets[0].data = catTotals.map(c => c.total);
   horizChart.data.datasets[0].backgroundColor = catTotals.map(c => c.color);
   horizChart.update();
+
+  // ── Waterfall Chart Update ──
+  (function() {
+    const cfg = MODES[mode];
+    // Build waterfall: Income bar, then each expense category dropping down, then Net
+    const wLabels = [cfg.income];
+    const wValues = [totalIncome];   // actual bar heights
+    const wBases  = [0];             // stacked base (transparent bar below)
+    const wColors = ['#2e7048'];
+
+    // Running total starts at income, each category drops it
+    let running = totalIncome;
+    catTotals.forEach(cat => {
+      if (cat.total <= 0) return;
+      wLabels.push(cat.name);
+      wValues.push(-cat.total);           // negative = dropping bar
+      wBases.push(running);               // base = where we currently are
+      wColors.push('#c0392b');
+      running -= cat.total;
+    });
+
+    // Final net bar
+    wLabels.push(net >= 0 ? cfg.net : 'Deficit');
+    wValues.push(Math.abs(net));
+    wBases.push(Math.min(0, net));
+    wColors.push(net >= 0 ? '#3d6b9e' : '#8b5e3c');
+
+    waterfallChart.data.labels = wLabels;
+    waterfallChart.data.datasets[0].data = wValues;
+    waterfallChart.data.datasets[0].backgroundColor = wColors;
+    waterfallChart.data.datasets[1].data = wBases;  // transparent base
+    waterfallChart.update();
+  })();
+
+  // ── Runway Projection Update ──
+  (function() {
+    const months = ['Now','Mo 1','Mo 2','Mo 3','Mo 4','Mo 5','Mo 6','Mo 7','Mo 8','Mo 9','Mo 10','Mo 11','Mo 12'];
+    const balances = [];
+    // Start from current month's net as initial "balance"
+    // (assumes user's current figures represent Month 0 position)
+    let bal = totalIncome; // starting point = this month's income
+    for (let i = 0; i <= 12; i++) {
+      if (i === 0) {
+        balances.push(bal);
+      } else {
+        bal += net;
+        balances.push(bal);
+      }
+    }
+
+    // Color line red if heading toward zero
+    const goingNegative = balances.some(b => b < 0);
+    runwayChart.data.labels = months;
+    runwayChart.data.datasets[0].data = balances;
+    runwayChart.data.datasets[0].borderColor = goingNegative ? '#c0392b' : '#2e7048';
+    runwayChart.data.datasets[0].backgroundColor = goingNegative ? 'rgba(192,57,43,0.08)' : 'rgba(46,112,72,0.08)';
+    runwayChart.data.datasets[0].pointBackgroundColor = goingNegative ? '#c0392b' : '#2e7048';
+
+    // Break-even line at 0
+    runwayChart.data.datasets[1].data = Array(13).fill(0);
+
+    // Update subtitle based on mode and trajectory
+    const sub = document.getElementById('runway-sub');
+    if (sub) {
+      const cfg = MODES[mode];
+      if (net === 0) {
+        sub.textContent = 'Breaking even — balance stays flat over 12 months.';
+        sub.style.color = 'var(--t3)';
+      } else if (net > 0) {
+        const months12 = net * 12;
+        sub.textContent = 'Projected to accumulate $' + months12.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' over the next 12 months.';
+        sub.style.color = 'var(--green)';
+      } else if (totalIncome === 0) {
+        sub.textContent = 'No income entered — showing operating loss projection of $' + Math.abs(net * 12).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/yr.';
+        sub.style.color = 'var(--red)';
+      } else {
+        let b = totalIncome, mo = 0;
+        while (b > 0 && mo < 120) { b += net; mo++; }
+        sub.textContent = mo > 0
+          ? 'At current rate, balance reaches zero in ~' + mo + ' month' + (mo === 1 ? '' : 's') + '. Reduce expenses or increase income.'
+          : 'Immediate deficit — expenses exceed income from month one.';
+        sub.style.color = 'var(--red)';
+      }
+    }
+
+    runwayChart.update();
+
+    // Update runway insight card
+    const ri = document.getElementById('insight-runway');
+    const ris = document.getElementById('insight-runway-sub');
+    const ril = document.getElementById('runway-insight-label');
+    if (ri && ris && ril) {
+      const cfg = MODES[mode];
+      ril.textContent = mode === 'business' ? 'Business Runway' : 'Savings Runway';
+      if (net > 0) {
+        ri.textContent = '+$' + (net * 12).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' by Month 12';
+        ri.style.color = 'var(--green)';
+        ris.textContent = "On track — growing at $" + net.toLocaleString('en-US', { maximumFractionDigits: 0 }) + "/mo net";
+      } else if (net === 0) {
+        ri.textContent = 'Breaking Even';
+        ri.style.color = 'var(--t3)';
+        ris.textContent = 'Income exactly covers expenses';
+      } else if (totalIncome === 0) {
+        // No income at all — show pure operating loss
+        ri.textContent = '-$' + Math.abs(net * 12).toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' loss/yr';
+        ri.style.color = 'var(--red)';
+        ris.textContent = 'Operating loss of $' + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/mo with no income';
+      } else {
+        // Has some income but in deficit — calculate months until zero
+        let b = totalIncome, mo = 0;
+        while (b > 0 && mo < 120) { b += net; mo++; }
+        ri.textContent = mo > 0 ? 'Zero in ~' + mo + ' mo' : 'Immediate Deficit';
+        ri.style.color = 'var(--red)';
+        ris.textContent = 'Spending $' + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/mo more than earned';
+      }
+    }
+  })();
 
   // Cat totals in UI
   categories.forEach((cat, ci) => {
