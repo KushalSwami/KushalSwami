@@ -546,11 +546,67 @@ let categories = [];
 
 // ── CHARTS ─────────────────────────────────────────────────────────────
 let donutChart, barChart, horizChart, waterfallChart, runwayChart;
+const donutKPI = { rate: '—', rateLabel: 'saved', net: '', netLabel: 'net / mo', positive: true };
 
 function initCharts() {
   const font = { family: "'DM Mono', monospace", size: 11 };
   Chart.defaults.font = font;
   Chart.defaults.color = '#8a8278';
+
+  const kpiPlugin = {
+    id: 'kpiCenter',
+    afterDraw(chart) {
+      if (chart.canvas.id !== 'donutChart') return;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+
+      // Chart.js places the donut in the left portion when legend is right
+      // The actual donut center is the midpoint of the chartArea
+      const cx = (chartArea.left + chartArea.right) / 2;
+      const cy = (chartArea.top + chartArea.bottom) / 2;
+
+      const green = '#2e7048', red = '#c0392b', muted = '#8a8278', border = '#cdc8be';
+      const mainColor = donutKPI.positive ? green : red;
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Rate (big number)
+      // Scale font size so long values like "4210%" always fit
+      const rateFontSize = donutKPI.rate.length <= 5 ? 24 : donutKPI.rate.length <= 7 ? 18 : 14;
+      ctx.font = "300 " + rateFontSize + "px 'Cormorant Garamond', serif";
+      ctx.fillStyle = donutKPI.rate === '—' ? muted : mainColor;
+      ctx.fillText(donutKPI.rate, cx, cy - 22);
+
+      // Rate label (small caps)
+      ctx.font = "400 8px 'DM Mono', monospace";
+      ctx.fillStyle = muted;
+      ctx.fillText(donutKPI.rateLabel.toUpperCase(), cx, cy + 2);
+
+      // Divider line
+      ctx.strokeStyle = border;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - 14, cy + 10);
+      ctx.lineTo(cx + 14, cy + 10);
+      ctx.stroke();
+
+      // Net amount
+      if (donutKPI.net) {
+        ctx.font = "500 12px 'DM Mono', monospace";
+        ctx.fillStyle = donutKPI.rate === '—' ? muted : mainColor;
+        ctx.fillText(donutKPI.net, cx, cy + 22);
+      }
+
+      // Net label
+      ctx.font = "400 8px 'DM Mono', monospace";
+      ctx.fillStyle = muted;
+      ctx.fillText(donutKPI.netLabel, cx, cy + 34);
+
+      ctx.restore();
+    }
+  };
 
   donutChart = new Chart(document.getElementById('donutChart'), {
     type: 'doughnut',
@@ -580,8 +636,9 @@ function initCharts() {
           cornerRadius: 6
         }
       },
-      cutout: '65%'
-    }
+      cutout: '70%'
+    },
+    plugins: [kpiPlugin]
   });
 
   // ── Waterfall Chart ──
@@ -848,6 +905,21 @@ function updateAll() {
   donutChart.data.datasets[0].backgroundColor = catTotals.filter(c => c.total > 0).map(c => c.color);
   donutChart.update();
 
+  // Center KPI — write to donutKPI object, chart plugin reads it on next draw
+  if (totalIncome > 0) {
+    const rate = ((net / totalIncome) * 100).toFixed(1);
+    donutKPI.rate = Math.abs(rate) + '%';
+    donutKPI.rateLabel = net >= 0 ? 'saved' : 'deficit';
+    donutKPI.net = (net < 0 ? '-$' : '+$') + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 });
+    donutKPI.positive = net >= 0;
+  } else {
+    donutKPI.rate = '—';
+    donutKPI.rateLabel = 'saved';
+    donutKPI.net = '';
+    donutKPI.positive = true;
+  }
+  donutKPI.netLabel = mode === 'business' ? 'net profit' : 'net / mo';
+
   // Bar chart
   barChart.data.datasets[0].data = [totalIncome, totalExpenses, net];
   barChart.data.datasets[0].backgroundColor = [
@@ -885,9 +957,17 @@ function updateAll() {
 
     // Final net bar
     wLabels.push(net >= 0 ? cfg.net : 'Deficit');
-    wValues.push(Math.abs(net));
-    wBases.push(Math.min(0, net));
-    wColors.push(net >= 0 ? '#3d6b9e' : '#8b5e3c');
+    if (net >= 0) {
+      // Surplus: bar rises from zero up to net value
+      wValues.push(net);
+      wBases.push(0);
+      wColors.push('#3d6b9e');
+    } else {
+      // Deficit: bar drops below zero like the expense bars
+      wValues.push(net);   // negative value → bar goes downward
+      wBases.push(0);      // starts at zero line
+      wColors.push('#8b5e3c');
+    }
 
     waterfallChart.data.labels = wLabels;
     waterfallChart.data.datasets[0].data = wValues;
