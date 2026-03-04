@@ -40,6 +40,55 @@
   --amber-light: #faecd0;
 }
 
+/* ── DARK MODE — Slate Night ── */
+body.dark {
+  --bg: #141820;
+  --surface: #1c2130;
+  --surface2: #222838;
+  --border: #2a2f3d;
+  --text: #dde2ec;
+  --t2: #b8c8dc;
+  --t3: #6e8098;
+  --green: #4e9e7a;
+  --green-light: #1a2e25;
+  --blue: #5b8ec4;
+  --blue-light: #162035;
+  --red: #e05555;
+  --red-light: #2e1515;
+  --amber: #d4a030;
+  --amber-light: #2a2008;
+}
+body.dark nav {
+  background: rgba(20,24,32,0.96);
+}
+body.dark .item-row { background: var(--surface2); }
+body.dark .summary-card { background: var(--surface2); }
+body.dark .chart-card { background: var(--surface); }
+body.dark .insight-card { background: var(--surface); }
+
+/* ── DARK TOGGLE ── */
+.dark-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--t3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.dark-toggle:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+.dark-toggle .toggle-icon { font-size: 13px; line-height: 1; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -64,7 +113,7 @@ nav {
   font-size: 20px; font-weight: 300;
   color: var(--text); text-decoration: none;
 }
-.nav-links { display: flex; gap: 24px; }
+.nav-links { display: flex; gap: 24px; margin-left: auto; margin-right: 16px; }
 .nav-links a {
   font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
   color: var(--t3); text-decoration: none;
@@ -379,6 +428,7 @@ canvas { max-width: 100%; }
   <div class="nav-links">
     <a href="index.html" class="nav-back">← Back to Site</a>
   </div>
+  <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="toggle-icon" id="toggle-icon">☽</span><span id="toggle-label">Dark</span></button>
 </nav>
 
 <div class="hero">
@@ -558,7 +608,11 @@ function initCharts() {
       const cx = (chartArea.left + chartArea.right) / 2;
       const cy = (chartArea.top + chartArea.bottom) / 2;
 
-      const green = '#2e7048', red = '#c0392b', muted = '#8a8278', border = '#cdc8be';
+      const isDark = document.body.classList.contains('dark');
+      const green = isDark ? '#4e9e7a' : '#2e7048';
+      const red   = isDark ? '#e05555' : '#c0392b';
+      const muted = isDark ? '#6e8098' : '#8a8278';
+      const border = isDark ? '#2a2f3d' : '#cdc8be';
       const mainColor = donutKPI.positive ? green : red;
 
       ctx.save();
@@ -611,7 +665,7 @@ function initCharts() {
           position: 'right',
           labels: {
             font: { family: "'DM Mono', monospace", size: 10 },
-            color: '#3c3830',
+            color: '#8a8278',
             boxWidth: 10,
             padding: 14
           }
@@ -679,7 +733,7 @@ function initCharts() {
           const isExpense = i > 0 && i < data.labels.length - 1;
           const absVal = Math.abs(val);
           const label = (isExpense ? '-$' : '$') + absVal.toLocaleString('en-US', { maximumFractionDigits: 0 });
-          ctx.fillStyle = '#3c3830';
+          ctx.fillStyle = document.body.classList.contains('dark') ? '#b8c8dc' : '#3c3830';
           ctx.font = "500 10px 'DM Mono', monospace";
           ctx.textAlign = 'center';
           // Always place label above the topmost point of the bar
@@ -767,7 +821,7 @@ function initCharts() {
           const absVal = Math.abs(val);
           const prefix = val < 0 ? '-$' : '$';
           const label = prefix + absVal.toLocaleString('en-US', { maximumFractionDigits: 0 });
-          ctx.fillStyle = '#3c3830';
+          ctx.fillStyle = document.body.classList.contains('dark') ? '#b8c8dc' : '#3c3830';
           ctx.font = "400 10.5px 'DM Mono', monospace";
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
@@ -823,7 +877,7 @@ function initCharts() {
         },
         y: {
           grid: { display: false },
-          ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: '#3c3830' }
+          ticks: { font: { family: "'DM Mono', monospace", size: 10 }, color: '#8a8278' }
         }
       }
     },
@@ -848,7 +902,7 @@ function initCharts() {
               ctx.textBaseline = 'middle';
               ctx.fillText(label, bar.x - padding, bar.y);
             } else {
-              ctx.fillStyle = '#3c3830';
+              ctx.fillStyle = document.body.classList.contains('dark') ? '#b8c8dc' : '#3c3830';
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle';
               ctx.fillText(label, bar.x + padding, bar.y);
@@ -1342,6 +1396,106 @@ document.addEventListener('DOMContentLoaded', () => {
   const restored = loadData();
   if (!restored) setMode('personal');
 });
+
+// ── DARK MODE ──────────────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('dark-toggle');
+  const icon = document.getElementById('toggle-icon');
+  const label = document.getElementById('toggle-label');
+
+  function getThemeColors(dark) {
+    return {
+      muted:    dark ? '#6e8098' : '#8a8278',
+      text2:    dark ? '#b8c8dc' : '#3c3830',
+      bg:       dark ? '#141820' : '#f4f0ea',
+      surface:  dark ? '#1c2130' : '#ebe6de',
+      border:   dark ? '#2a2f3d' : '#cdc8be',
+      tooltip:  dark ? '#0f1117' : '#1c1a16',
+      tooltipBorder: dark ? '#2a2f3d' : '#cdc8be',
+    };
+  }
+
+  function rechartTheme(dark) {
+    if (!window.donutChart) return;
+    const c = getThemeColors(dark);
+
+    // Shared tooltip style
+    const tooltipOpts = {
+      backgroundColor: c.tooltip,
+      titleColor: c.muted,
+      bodyColor: c.text2,
+    };
+
+    // Donut
+    donutChart.data.datasets[0].borderColor = c.bg;
+    donutChart.options.plugins.legend.labels.color = c.text2;
+    Object.assign(donutChart.options.plugins.tooltip, tooltipOpts);
+    donutChart.update();
+
+    // Bar (Income/Expenses/Net)
+    if (window.barChart) {
+      barChart.options.scales.x.grid.color = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+      barChart.options.scales.x.ticks.color = c.muted;
+      barChart.options.scales.y.ticks.color = c.muted;
+      Object.assign(barChart.options.plugins.tooltip, tooltipOpts);
+      barChart.update();
+    }
+
+    // Horiz chart (Category breakdown)
+    if (window.horizChart) {
+      horizChart.options.scales.x.grid.color = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+      horizChart.options.scales.x.ticks.color = c.muted;
+      horizChart.options.scales.y.ticks.color = c.muted;
+      Object.assign(horizChart.options.plugins.tooltip, tooltipOpts);
+      horizChart.update();
+    }
+
+    // Waterfall
+    if (window.waterfallChart) {
+      waterfallChart.options.scales.x.ticks.color = c.muted;
+      waterfallChart.options.scales.y.grid.color = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+      waterfallChart.options.scales.y.ticks.color = c.muted;
+      Object.assign(waterfallChart.options.plugins.tooltip, tooltipOpts);
+      waterfallChart.update();
+    }
+
+    // Runway
+    if (window.runwayChart) {
+      runwayChart.options.scales.x.ticks.color = c.muted;
+      runwayChart.options.scales.y.grid.color = dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+      runwayChart.options.scales.y.ticks.color = c.muted;
+      Object.assign(runwayChart.options.plugins.tooltip, tooltipOpts);
+      runwayChart.update();
+    }
+
+    // Update Chart.js global defaults
+    Chart.defaults.color = c.muted;
+  }
+
+  function setDark(on) {
+    document.body.classList.toggle('dark', on);
+    icon.textContent = on ? '☀' : '☽';
+    label.textContent = on ? 'Light' : 'Dark';
+    rechartTheme(on);
+    try { localStorage.setItem('ks_dark_mode', on ? '1' : '0'); } catch(e) {}
+  }
+
+  // Restore saved preference
+  try {
+    const saved = localStorage.getItem('ks_dark_mode');
+    if (saved === '1') {
+      document.body.classList.add('dark');
+      icon.textContent = '☀';
+      label.textContent = 'Light';
+      // Retheme charts after they're initialized
+      document.addEventListener('DOMContentLoaded', () => setTimeout(() => rechartTheme(true), 50));
+    }
+  } catch(e) {}
+
+  btn.addEventListener('click', function() {
+    setDark(!document.body.classList.contains('dark'));
+  });
+})();
 </script>
 </body>
 </html>

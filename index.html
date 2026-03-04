@@ -79,6 +79,7 @@ html, body {
   --border: #cdc8be;
   --line: #cdc8be;
   --text: #1c1a16;
+  --text2: #3c3830;
   --muted: #8a8278;
   --work-accent: #2e7048;
   --work-light: #d0e4d8;
@@ -89,7 +90,82 @@ html, body {
   --hover-shadow: 0 8px 32px rgba(0,0,0,0.12);
   --nav-height: 64px;
   --max-width: 1200px;
+  --card-bg: #ebe6de;
+  --card-fade: var(--surface);
 }
+
+/* ── DARK MODE — Slate Night ── */
+body.dark {
+  --bg: #141820;
+  --surface: #1c2130;
+  --surface2: #222838;
+  --border: #2a2f3d;
+  --line: #2a2f3d;
+  --text: #dde2ec;
+  --text2: #b8c8dc;
+  --muted: #6e8098;
+  --work-accent: #4e9e7a;
+  --work-light: #1a2e25;
+  --edu-accent: #5b8ec4;
+  --edu-light: #162035;
+  --vol-accent: #b07a52;
+  --vol-light: #2a1e12;
+  --hover-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --card-bg: #1c2130;
+  --card-fade: #1c2130;
+}
+
+/* Dark mode nav background */
+body.dark nav {
+  background: rgba(20,24,32,0.96);
+}
+body.dark .nav-links.open {
+  background: rgba(20,24,32,0.98);
+}
+body.dark .card {
+  background: var(--card-bg);
+}
+body.dark .card-details::after {
+  background: linear-gradient(to bottom, transparent, var(--card-fade));
+}
+body.dark .card:hover .card-title,
+body.dark .card.locked .card-title,
+body.dark .card.tapped .card-title {
+  color: #ffffff;
+}
+body.dark .hero-tagline { color: var(--text2); }
+body.dark .highlight-desc { color: var(--text2); }
+body.dark .highlight-card:hover { border-color: var(--work-accent); }
+body.dark .skill-tag { color: var(--text2); }
+body.dark .card-org,
+body.dark .card-dates,
+body.dark .card-details ul li { color: var(--text2); }
+body.dark .year-marker span { background: var(--bg); }
+body.dark .contact-sub { color: var(--text2); }
+
+/* ── DARK MODE TOGGLE BUTTON ── */
+.dark-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.dark-toggle:hover {
+  border-color: var(--work-accent);
+  color: var(--work-accent);
+}
+.dark-toggle .toggle-icon { font-size: 13px; line-height: 1; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
@@ -250,9 +326,9 @@ nav {
   font-size: clamp(21.5px, 2.8vw, 30.5px);
   font-weight: 300;
   font-style: italic;
-  color: #3c3830;
+  color: var(--text2);
   max-width: 660px;
-  margin-bottom: 32px;
+  margin-bottom: 48px;
   animation: fadeUp 0.8s 0.3s ease both;
   line-height: 1.5;
   position: relative; z-index: 1;
@@ -428,7 +504,7 @@ nav {
   line-height: 1.2;
 }
 .highlight-desc {
-  color: #3c3830;
+  color: var(--text2);
   font-size: 13.6px;
   line-height: 1.8;
 }
@@ -464,7 +540,7 @@ nav {
 .skill-tag {
   background: var(--bg);
   border: 1px solid var(--border);
-  color: #3c3830;
+  color: var(--text2);
   font-size: 13.6px;
   padding: 6px 14px;
   border-radius: 4px;
@@ -568,7 +644,7 @@ nav {
 }
 
 .card {
-  background: #ebe6de;
+  background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 18px 20px;
@@ -632,10 +708,10 @@ nav {
 }
 .card:hover .card-title { color: #000000; }
 
-.card-org   { font-size: 13.6px; color: #3c3830; margin-bottom: 8px; }
+.card-org   { font-size: 13.6px; color: var(--text2); margin-bottom: 8px; }
 .card-dates {
   font-size: 12.4px;
-  color: #3c3830;
+  color: var(--text2);
   letter-spacing: 1px;
   margin-bottom: 10px;
   padding-bottom: 10px;
@@ -690,7 +766,7 @@ nav {
   padding: 3px 0 3px 22px;
   position: relative;
   line-height: 1.7;
-  color: #3c3830;
+  color: var(--text2);
   font-size: 13.6px;
   list-style: none;
 }
@@ -731,7 +807,7 @@ nav {
 .contact-inner .section-title { margin-bottom: 16px; }
 
 .contact-sub {
-  color: #3c3830;
+  color: var(--text2);
   font-size: 14.7px;
   margin-bottom: 52px;
   line-height: 1.9;
@@ -912,6 +988,7 @@ footer {
     <li><a href="#timeline">Timeline</a></li>
     <li><a href="budget_visualizer.html" class="nav-tool">Budget Tool</a></li>
     <li><a href="#contact" class="nav-cta">Contact</a></li>
+    <li><button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="toggle-icon" id="toggle-icon">☽</span><span id="toggle-label">Dark</span></button></li>
   </ul>
   <button class="hamburger" id="hamburger" aria-label="Menu">
     <span class="hamburger-label">Menu</span>
@@ -1414,6 +1491,31 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     init();
   }
+})();
+</script>
+<script>
+// ── DARK MODE ──────────────────────────────────────────────────────────
+(function() {
+  const btn = document.getElementById('dark-toggle');
+  const icon = document.getElementById('toggle-icon');
+  const label = document.getElementById('toggle-label');
+
+  function setDark(on) {
+    document.body.classList.toggle('dark', on);
+    icon.textContent = on ? '☀' : '☽';
+    label.textContent = on ? 'Light' : 'Dark';
+    try { localStorage.setItem('ks_dark_mode', on ? '1' : '0'); } catch(e) {}
+  }
+
+  // Restore preference (shared with budget page)
+  try {
+    const saved = localStorage.getItem('ks_dark_mode');
+    if (saved === '1') setDark(true);
+  } catch(e) {}
+
+  btn.addEventListener('click', function() {
+    setDark(!document.body.classList.contains('dark'));
+  });
 })();
 </script>
 </body>
