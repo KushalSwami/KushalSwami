@@ -242,7 +242,7 @@ canvas { max-width: 100%; }
 
 /* Insight bar */
 .insights {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px;
   grid-auto-rows: auto;
 }
 .insight-card {
@@ -384,7 +384,7 @@ canvas { max-width: 100%; }
 <div class="hero">
   <p class="hero-label">Financial Overview</p>
   <h1>Budget Visualizer</h1>
-  <p class="hero-sub">Enter your income and expenses below. Charts update in real time — works for personal budgets and business P&L alike.</p>
+  <p class="hero-sub">Enter your monthly income and expenses below. Charts update in real time — works for personal budgets and business P&L alike.</p>
   <p style="margin-top:10px;font-size:11px;color:var(--green);letter-spacing:0.5px;">✓ All data automatically saved — hit the Reset button on the right for a new session.</p>
 </div>
 
@@ -405,30 +405,17 @@ canvas { max-width: 100%; }
     <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">Data Entry<span id="save-status" style="font-size:9px;letter-spacing:1px;color:var(--t3);font-weight:normal;"></span></div>
 
     <!-- Summary -->
-    <div class="summary-row">
-      <div class="summary-card income">
-      <div class="tooltip"><div class="tt-desc" id="tt-income-desc">All money earned or received — wages, freelance, investments, or any other inflow.</div><div class="tt-formula"><span class="tt-piece income">Source 1</span><span class="tt-op">+</span><span class="tt-piece income">Source 2</span><span class="tt-op">···</span><span class="tt-op">=</span><span class="tt-piece result">Income</span></div></div>
-        <div class="sc-label" id="lbl-income">Income</div>
-        <div class="sc-value positive" id="total-income">$0</div>
-      </div>
-      <div class="summary-card expenses">
-      <div class="tooltip"><div class="tt-desc" id="tt-expense-desc">All money paid out — bills, purchases, costs, or any other outflow.</div><div class="tt-formula"><span class="tt-piece expense">Cat 1</span><span class="tt-op">+</span><span class="tt-piece expense">Cat 2</span><span class="tt-op">···</span><span class="tt-op">=</span><span class="tt-piece result">Expenses</span></div></div>
-        <div class="sc-label" id="lbl-expenses">Expenses</div>
-        <div class="sc-value negative" id="total-expenses">$0</div>
-      </div>
-      <div class="summary-card savings">
-      <div class="tooltip"><div class="tt-desc" id="tt-net-desc">Money left over after covering all expenses. Positive means a surplus; negative means a deficit.</div><div class="tt-formula"><span class="tt-piece income">Income</span><span class="tt-op">−</span><span class="tt-piece expense">Expenses</span><span class="tt-op">=</span><span class="tt-piece net">Net</span></div></div>
-        <div class="sc-label" id="lbl-net">Net</div>
-        <div class="sc-value" id="total-net">$0</div>
-      </div>
-      <div class="summary-card rate">
-      <div class="tooltip"><div class="tt-desc">The percentage of income you keep after covering all expenses.</div><div class="tt-formula"><span class="tt-piece net">Net</span><span class="tt-op">÷</span><span class="tt-piece income">Income</span><span class="tt-op">×</span><span class="tt-piece result">100</span><span class="tt-op">=</span><span class="tt-piece rate">Rate %</span></div></div>
-        <div class="sc-label">Savings Rate</div>
-        <div class="sc-value" id="savings-rate">0%</div>
-      </div>
-    </div>
+    <!-- Hidden refs for JS compatibility -->
+    <span id="lbl-income" style="display:none;"></span>
+    <span id="lbl-expenses" style="display:none;"></span>
+    <span id="lbl-net" style="display:none;"></span>
+    <span id="tt-income-desc" style="display:none;"></span>
+    <span id="tt-expense-desc" style="display:none;"></span>
+    <span id="tt-net-desc" style="display:none;"></span>
+    <span id="total-net" style="display:none;">$0</span>
+    <span id="savings-rate" style="display:none;">0%</span>
 
-    <!-- Income section -->
+        <!-- Income section -->
     <div class="section-header">
       <span class="section-name" id="income-section-name">Income</span>
       <button class="add-btn" onclick="addItem('income')">+ Add</button>
@@ -448,6 +435,16 @@ canvas { max-width: 100%; }
   <div class="charts-panel" id="charts">
 
     <div class="insights">
+      <div class="insight-card" style="border-left:3px solid var(--green);">
+        <div class="insight-label" id="lbl-income-card">Income</div>
+        <div class="insight-value positive" id="total-income">$0</div>
+        <div class="insight-sub">total this month</div>
+      </div>
+      <div class="insight-card" style="border-left:3px solid var(--red);">
+        <div class="insight-label" id="lbl-expenses-card">Expenses</div>
+        <div class="insight-value negative" id="total-expenses">$0</div>
+        <div class="insight-sub">total this month</div>
+      </div>
       <div class="insight-card">
         <div class="insight-label">Largest Expense</div>
         <div class="insight-value" id="insight-largest">—</div>
@@ -458,11 +455,7 @@ canvas { max-width: 100%; }
         <div class="insight-value" id="insight-surplus">$0</div>
         <div class="insight-sub" id="insight-surplus-sub">per month</div>
       </div>
-      <div class="insight-card">
-        <div class="insight-label">Annual Projection</div>
-        <div class="insight-value" id="insight-annual">$0</div>
-        <div class="insight-sub">net × 12 months</div>
-      </div>
+      <span id="insight-annual" style="display:none;">$0</span>
       <div class="insight-card" style="grid-column: 1 / -1; border-left: 3px solid var(--blue);">
         <div class="insight-label" id="runway-insight-label">12-Month Outlook</div>
         <div class="insight-value" id="insight-runway" style="font-size:18px;">—</div>
@@ -886,7 +879,7 @@ function updateAll() {
   const netEl = document.getElementById('total-net');
   const netDisplay = net === 0 ? '$0' : (net < 0 ? '-' : '') + fmt(net);
   netEl.textContent = netDisplay;
-  netEl.className = 'sc-value ' + (net >= 0 ? 'positive' : 'negative');
+  // total-net is now a hidden span
   const rateEl = document.getElementById('savings-rate');
   rateEl.textContent = savingsRate + '%';
   rateEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
@@ -1160,6 +1153,10 @@ function setMode(m) {
   document.getElementById('lbl-income').textContent = cfg.income;
   document.getElementById('lbl-expenses').textContent = cfg.expenses;
   document.getElementById('lbl-net').textContent = cfg.net;
+  const _ic = document.getElementById('lbl-income-card');
+  const _ec = document.getElementById('lbl-expenses-card');
+  if (_ic) _ic.textContent = cfg.income;
+  if (_ec) _ec.textContent = cfg.expenses;
 
   // Snapshot current mode before switching
   if (mode !== m) saveModeSnapshot(mode);
@@ -1274,6 +1271,10 @@ function loadData() {
     document.getElementById('lbl-income').textContent = cfg.income;
     document.getElementById('lbl-expenses').textContent = cfg.expenses;
     document.getElementById('lbl-net').textContent = cfg.net;
+    const _ic2 = document.getElementById('lbl-income-card');
+    const _ec2 = document.getElementById('lbl-expenses-card');
+    if (_ic2) _ic2.textContent = cfg.income;
+    if (_ec2) _ec2.textContent = cfg.expenses;
 
     // Sync tooltip descriptions
     const isB = mode === 'business';
