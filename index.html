@@ -223,19 +223,137 @@ nav {
 
 .nav-links a:hover { color: var(--work-accent); }
 
-.nav-tool {
-  background: var(--work-light) !important;
-  color: var(--work-accent) !important;
-  border: 1px solid var(--work-accent) !important;
-  padding: 5px 14px !important;
-  border-radius: 4px !important;
-  font-size: 11px !important;
-  letter-spacing: 1px !important;
-  transition: all 0.2s !important;
+/* ── TOOLBOX DROPDOWN ── */
+.nav-toolbox {
+  position: relative;
+  list-style: none;
 }
-.nav-tool:hover {
-  background: var(--work-accent) !important;
-  color: var(--bg) !important;
+.nav-toolbox-btn {
+  background: var(--work-light);
+  color: var(--work-accent);
+  border: 1px solid var(--work-accent);
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-toolbox:hover .nav-toolbox-btn,
+.nav-toolbox-btn:focus {
+  background: var(--work-accent);
+  color: var(--bg);
+}
+.tb-caret {
+  font-size: 8px;
+  transition: transform 0.2s;
+  line-height: 1;
+  display: inline-block;
+}
+.nav-toolbox:hover .tb-caret { transform: rotate(180deg); }
+
+.toolbox-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  min-width: 168px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 200;
+}
+/* Invisible bridge fills the gap between button and dropdown so hover doesn't break */
+.toolbox-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+.nav-toolbox:hover .toolbox-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+body.dark .toolbox-dropdown {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.toolbox-dropdown a {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px !important;
+  border-radius: 4px;
+  font-size: 11px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase;
+  color: var(--text2) !important;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.toolbox-dropdown a:hover {
+  background: var(--work-light);
+  color: var(--work-accent) !important;
+}
+.dd-icon { font-size: 13px; flex-shrink: 0; }
+.dd-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 2px;
+}
+
+/* ── HERO TOOLBOX BUTTON ── */
+.hero-toolbox {
+  position: relative;
+  display: inline-flex;
+}
+.hero-toolbox-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 14px 32px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13.6px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.hero-toolbox:hover .hero-toolbox-btn {
+  border-color: var(--text);
+  transform: translateY(-1px);
+}
+.hero-toolbox:hover .hero-toolbox-btn .tb-caret { transform: rotate(180deg); }
+.hero-toolbox .toolbox-dropdown {
+  top: calc(100% + 8px);
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  min-width: 180px;
+}
+.hero-toolbox:hover .toolbox-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
 }
 
 .nav-cta {
@@ -259,7 +377,7 @@ nav {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: calc(var(--nav-height) + 60px) 5% 100px;
+  padding: calc(var(--nav-height) + 60px) 5% 140px;
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -389,7 +507,8 @@ nav {
   letter-spacing: 2px;
   text-transform: uppercase;
   animation: fadeUp 1s 0.8s ease both;
-  z-index: 1;
+  z-index: 0;
+  pointer-events: none;
 }
 .scroll-line {
   width: 1px; height: 40px;
@@ -956,6 +1075,37 @@ footer {
     font-size: 13px;
     letter-spacing: 2px;
   }
+  /* Toolbox becomes flat links in mobile hamburger menu */
+  .nav-links.open .nav-toolbox {
+    display: contents;
+  }
+  .nav-links.open .nav-toolbox-btn {
+    display: none;
+  }
+  .nav-links.open .toolbox-dropdown {
+    position: static !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    min-width: unset !important;
+  }
+  .nav-links.open .toolbox-dropdown a {
+    padding: 14px 0 14px 16px !important;
+    font-size: 13px !important;
+    letter-spacing: 2px !important;
+    color: var(--work-accent) !important;
+    border-bottom: 1px solid var(--border) !important;
+    border-radius: 0 !important;
+    background: none !important;
+  }
+  .nav-links.open .toolbox-dropdown a:last-of-type {
+    border-bottom: none !important;
+  }
+  .nav-links.open .dd-sep { display: none !important; }
   #stats { grid-template-columns: repeat(3, 1fr); }
   .highlights-grid { grid-template-columns: 1fr; }
   .skills-grid { grid-template-columns: 1fr; }
@@ -984,7 +1134,14 @@ footer {
     <li><a href="#highlights">Highlights</a></li>
     <li><a href="#skills">Skills</a></li>
     <li><a href="#timeline">Timeline</a></li>
-    <li><a href="budget_visualizer.html" class="nav-tool">Budget Tool</a></li>
+    <li class="nav-toolbox" id="nav-toolbox">
+      <button class="nav-toolbox-btn">Toolbox <span class="tb-caret">▼</span></button>
+      <div class="toolbox-dropdown">
+        <a href="budget_visualizer.html"><span class="dd-icon">📊</span> Budget Tool</a>
+        <div class="dd-sep"></div>
+        <a href="whiteboard.html"><span class="dd-icon">✏️</span> Whiteboard</a>
+      </div>
+    </li>
     <li><a href="#contact" class="nav-cta">Contact</a></li>
     <li><button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="toggle-icon" id="toggle-icon">☽</span><span id="toggle-label">Dark</span></button></li>
   </ul>
@@ -1002,6 +1159,14 @@ footer {
   <div class="hero-buttons">
     <a href="#timeline" class="btn-primary">View My Timeline</a>
     <a href="#contact" class="btn-secondary">Get In Touch</a>
+    <div class="hero-toolbox">
+      <button class="hero-toolbox-btn">Toolbox <span class="tb-caret">▼</span></button>
+      <div class="toolbox-dropdown">
+        <a href="budget_visualizer.html"><span class="dd-icon">📊</span> Budget Tool</a>
+        <div class="dd-sep"></div>
+        <a href="whiteboard.html"><span class="dd-icon">✏️</span> Whiteboard</a>
+      </div>
+    </div>
   </div>
   <div class="hero-scroll">
     <div class="scroll-line"></div>

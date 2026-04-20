@@ -419,6 +419,64 @@ canvas { max-width: 100%; }
   color: var(--bg) !important;
 }
 
+/* ── TOOLBOX DROPDOWN ── */
+.nav-toolbox { position: relative; }
+.nav-toolbox-btn {
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-toolbox:hover .nav-toolbox-btn { background: var(--green); color: var(--bg); }
+.tb-caret { font-size: 8px; transition: transform 0.2s; line-height: 1; display: inline-block; }
+.nav-toolbox:hover .tb-caret { transform: rotate(180deg); }
+.toolbox-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  min-width: 168px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 200;
+}
+.nav-toolbox:hover .toolbox-dropdown { opacity: 1; pointer-events: auto; transform: translateY(0); }
+body.dark .toolbox-dropdown { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.toolbox-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--t2);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  font-family: 'DM Mono', monospace;
+}
+.toolbox-dropdown a:hover { background: var(--green-light); color: var(--green); }
+.dd-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+
 </style>
 </head>
 <body>
@@ -427,6 +485,14 @@ canvas { max-width: 100%; }
   <a href="index.html" class="nav-logo">Kushal Swami</a>
   <div class="nav-links">
     <a href="index.html" class="nav-back">← Back to Site</a>
+    <div class="nav-toolbox">
+      <button class="nav-toolbox-btn">Toolbox <span class="tb-caret">▼</span></button>
+      <div class="toolbox-dropdown">
+        <a href="budget_visualizer.html"><span style="font-size:13px;">📊</span> Budget Tool</a>
+        <div class="dd-sep"></div>
+        <a href="whiteboard.html"><span style="font-size:13px;">✏️</span> Whiteboard</a>
+      </div>
+    </div>
   </div>
   <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" title="Toggle dark mode"><span class="toggle-icon" id="toggle-icon">☽</span><span id="toggle-label">Dark</span></button>
 </nav>

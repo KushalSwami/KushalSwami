@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whiteboard — Kushal Swami</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMiIgZmlsbD0iIzJlNzA0OCIvPgogIDx0ZXh0IHg9IjMyIiB5PSI0NCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iNjAwIiAKICAgICAgICBmaWxsPSIjZjRmMGVhIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iLTEiPktTPC90ZXh0Pgo8L3N2Zz4=">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ── */
+:root {
+  --bg:      #f4f0ea;
+  --surface: #ebe6de;
+  --surface2:#e4dfd6;
+  --border:  #cdc8be;
+  --text:    #1c1a16;
+  --t2:      #3c3830;
+  --t3:      #8a8278;
+  --green:   #2e7048;
+  --green-l: #d0e4d8;
+  --blue:    #3d6b9e;
+  --red:     #c0392b;
+  --amber:   #c8860a;
+  --nav-h:   56px;
+  --toolbar-h: 52px;
+  --canvas-bg-light: #fafaf7;
+  --canvas-bg-dark:  #0f1219;
+  --grid-light: rgba(100,95,85,0.12);
+  --grid-dark:  rgba(180,200,220,0.07);
+}
+body.dark {
+  --bg:      #141820;
+  --surface: #1c2130;
+  --surface2:#222838;
+  --border:  #2a2f3d;
+  --text:    #dde2ec;
+  --t2:      #b8c8dc;
+  --t3:      #6e8098;
+  --green:   #4e9e7a;
+  --green-l: #1a2e25;
+  --blue:    #5b8ec4;
+  --red:     #e05555;
+  --amber:   #d4a030;
+}
+body.dark nav { background: rgba(20,24,32,0.97); }
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* ── NAV ── */
+nav {
+  height: var(--nav-h);
+  background: rgba(244,240,234,0.97);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 12px;
+  flex-shrink: 0; z-index: 100;
+  transition: background 0.2s;
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-weight: 300;
+  color: var(--text); text-decoration: none;
+  letter-spacing: -0.3px; margin-right: 4px;
+}
+.nav-sep { color: var(--border); font-size: 16px; }
+.nav-title {
+  font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--t3);
+}
+.nav-right { display:flex; align-items:center; gap:10px; margin-left:auto; }
+.nav-back {
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--green); text-decoration: none;
+  border: 1px solid var(--green); padding: 4px 12px; border-radius: 4px;
+  transition: all 0.2s;
+}
+.nav-back:hover { background: var(--green); color: var(--bg); }
+
+/* ── TOOLBOX DROPDOWN ── */
+.nav-toolbox { position: relative; }
+.nav-toolbox-btn {
+  background: var(--green-l);
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-toolbox:hover .nav-toolbox-btn { background: var(--green); color: var(--bg); }
+.tb-caret { font-size: 7px; transition: transform 0.2s; line-height: 1; display: inline-block; }
+.nav-toolbox:hover .tb-caret { transform: rotate(180deg); }
+.toolbox-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  min-width: 168px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 200;
+}
+.toolbox-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+.nav-toolbox:hover .toolbox-dropdown { opacity: 1; pointer-events: auto; transform: translateY(0); }
+body.dark .toolbox-dropdown { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.toolbox-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--t2);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  font-family: 'DM Mono', monospace;
+}
+.toolbox-dropdown a:hover { background: var(--green-l); color: var(--green); }
+.dd-sep { height: 1px; background: var(--border); margin: 4px 2px; }
+.dark-toggle {
+  background: none; border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 11px;
+  cursor: pointer; font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 1px; color: var(--t3);
+  display: flex; align-items: center; gap: 5px; transition: all 0.2s;
+}
+.dark-toggle:hover { border-color: var(--green); color: var(--green); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  height: var(--toolbar-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 4px;
+  flex-shrink: 0; z-index: 90;
+  overflow-x: auto; overflow-y: hidden;
+}
+.toolbar::-webkit-scrollbar { display: none; }
+
+.tb-group {
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 8px; border-right: 1px solid var(--border);
+}
+.tb-group:last-child { border-right: none; }
+.tb-group-label {
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--t3); margin-right: 4px; white-space: nowrap;
+}
+
+.tb-btn {
+  width: 34px; height: 34px;
+  background: none; border: 1px solid transparent;
+  border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--t2);
+  transition: all 0.15s; position: relative;
+  flex-shrink: 0;
+}
+.tb-btn:hover { background: var(--surface2); border-color: var(--border); }
+.tb-btn.active {
+  background: var(--green-l); border-color: var(--green); color: var(--green);
+}
+.tb-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.tb-btn.active svg { stroke: var(--green); }
+
+/* Tooltips */
+.tb-btn::after {
+  content: attr(data-tip);
+  position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
+  background: var(--text); color: var(--bg);
+  font-size: 9px; letter-spacing: 0.5px; white-space: nowrap;
+  padding: 3px 7px; border-radius: 3px; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s; z-index: 200;
+}
+.tb-btn:hover::after { opacity: 1; }
+
+/* Brush size slider */
+.size-wrap { display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+.size-label { font-size: 9px; color: var(--t3); letter-spacing: 1px; white-space: nowrap; }
+.size-slider {
+  width: 64px; accent-color: var(--green);
+  cursor: pointer; height: 3px;
+}
+.size-preview {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+.size-dot {
+  border-radius: 50%; background: var(--text);
+  transition: all 0.1s;
+}
+
+/* Color swatch row */
+.color-row { display: flex; align-items: center; gap: 5px; padding: 0 4px; }
+.color-swatch {
+  width: 20px; height: 20px; border-radius: 4px;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.color-swatch.active { border-color: var(--text); transform: scale(1.15); }
+.color-picker-wrap { position: relative; }
+.color-picker-btn {
+  width: 20px; height: 20px; border-radius: 4px;
+  cursor: pointer; border: 2px solid var(--border);
+  background: conic-gradient(red,yellow,lime,cyan,blue,magenta,red);
+  flex-shrink: 0; transition: transform 0.15s;
+}
+.color-picker-btn:hover { transform: scale(1.15); }
+input[type="color"].hidden-picker {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+
+/* Grid toggle */
+.grid-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9px; letter-spacing: 1px; color: var(--t3);
+  white-space: nowrap; cursor: pointer;
+  padding: 4px 8px; border-radius: 4px; border: 1px solid transparent;
+  transition: all 0.15s; background: none;
+  font-family: 'DM Mono', monospace; text-transform: uppercase;
+}
+.grid-toggle:hover { border-color: var(--border); background: var(--surface2); }
+.grid-toggle.on { border-color: var(--green); color: var(--green); background: var(--green-l); }
+.snap-toggle {
+  font-size: 9px; letter-spacing: 1px; color: var(--t3);
+  background: none; border: 1px solid transparent;
+  border-radius: 4px; padding: 4px 8px; cursor: pointer;
+  font-family: 'DM Mono', monospace; text-transform: uppercase;
+  transition: all 0.15s; white-space: nowrap;
+}
+.snap-toggle:hover { border-color: var(--border); background: var(--surface2); }
+.snap-toggle.on { border-color: var(--blue); color: var(--blue); background: rgba(61,107,158,0.1); }
+
+/* Zoom level button */
+.zoom-level-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1px;
+  color: var(--t3); background: none;
+  border: 1px solid transparent; border-radius: 4px;
+  padding: 4px 7px; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+  min-width: 38px; text-align: center;
+}
+.zoom-level-btn:hover { border-color: var(--border); background: var(--surface2); color: var(--text); }
+
+/* ── CANVAS WRAP ── */
+.canvas-wrap {
+  flex: 1; position: relative; overflow: hidden;
+}
+#grid-canvas {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 0;
+}
+#main-canvas {
+  position: absolute; inset: 0;
+  z-index: 1; touch-action: none;
+}
+
+/* ── STICKY NOTE ── */
+.sticky {
+  position: absolute; z-index: 10;
+  width: 180px; min-height: 100px;
+  border-radius: 6px; padding: 10px 12px 12px;
+  box-shadow: 2px 4px 16px rgba(0,0,0,0.18);
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  line-height: 1.6; cursor: move;
+  display: flex; flex-direction: column; gap: 6px;
+  animation: stickyIn 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+@keyframes stickyIn {
+  from { opacity:0; transform: scale(0.9) rotate(-1deg); }
+  to   { opacity:1; transform: scale(1) rotate(0deg); }
+}
+.sticky-header {
+  display: flex; justify-content: flex-end; gap: 4px;
+}
+.sticky-close {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(0,0,0,0.15); border: none; cursor: pointer;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  color: rgba(0,0,0,0.5); transition: background 0.15s; line-height:1;
+}
+.sticky-close:hover { background: rgba(0,0,0,0.3); }
+.sticky textarea {
+  width: 100%; border: none; background: transparent;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  line-height: 1.6; color: #1c1a16; resize: none;
+  outline: none; cursor: text; min-height: 64px;
+  overflow: hidden;
+}
+
+/* ── TEXT INPUT OVERLAY ── */
+.text-input-overlay {
+  position: absolute; z-index: 20;
+  background: transparent; border: 1px dashed var(--green);
+  outline: none; font-family: 'DM Mono', monospace;
+  font-size: 14px; color: var(--text);
+  padding: 4px 6px; min-width: 100px; min-height: 28px;
+  border-radius: 3px; resize: none; overflow: hidden;
+  line-height: 1.5;
+}
+
+/* ── STATUS BAR ── */
+.statusbar {
+  height: 28px; background: var(--surface2);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 16px; gap: 20px; flex-shrink: 0;
+  font-size: 9px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--t3);
+}
+.status-item { display: flex; align-items: center; gap: 5px; }
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+/* ── CONTEXT MENU ── */
+.ctx-menu {
+  position: fixed; z-index: 500;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 7px; padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  min-width: 140px; display: none;
+  animation: menuIn 0.12s ease;
+}
+@keyframes menuIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
+.ctx-item {
+  padding: 7px 12px; border-radius: 4px; cursor: pointer;
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--t2); display: flex; align-items: center; gap: 8px;
+  transition: background 0.1s;
+}
+.ctx-item:hover { background: var(--surface2); color: var(--text); }
+.ctx-item.danger { color: var(--red); }
+.ctx-item.danger:hover { background: rgba(192,57,43,0.08); }
+.ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
+
+/* Undo/redo btns in toolbar */
+.tb-btn[data-tip="Undo"], .tb-btn[data-tip="Redo"] { font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">Kushal Swami</a>
+  <span class="nav-sep">·</span>
+  <span class="nav-title">Whiteboard</span>
+  <div class="nav-right">
+    <a href="index.html" class="nav-back">← Back</a>
+    <div class="nav-toolbox">
+      <button class="nav-toolbox-btn">Toolbox <span class="tb-caret">▼</span></button>
+      <div class="toolbox-dropdown">
+        <a href="budget_visualizer.html"><span style="font-size:13px;">📊</span> Budget Tool</a>
+        <div class="dd-sep"></div>
+        <a href="whiteboard.html"><span style="font-size:13px;">✏️</span> Whiteboard</a>
+      </div>
+    </div>
+    <button class="dark-toggle" id="dark-toggle">
+      <span id="toggle-icon">☽</span>
+      <span id="toggle-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<!-- TOOLBAR -->
+<div class="toolbar" id="toolbar">
+
+  <!-- TOOLS -->
+  <div class="tb-group">
+    <span class="tb-group-label">Tool</span>
+
+    <button class="tb-btn active" id="tool-pen" data-tool="pen" data-tip="Pen">
+      <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-eraser" data-tool="eraser" data-tip="Eraser">
+      <svg viewBox="0 0 24 24"><path d="M20 20H7L3 16l11-11 6 6-2.5 2.5"/><path d="M6.0 11.0 l7 7"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-select" data-tool="select" data-tip="Select">
+      <svg viewBox="0 0 24 24"><path d="M5 3l14 9-7 2-2 7L5 3z"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-text" data-tool="text" data-tip="Text">
+      <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16" stroke-linecap="round"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-rect" data-tool="rect" data-tip="Rectangle">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-circle" data-tool="circle" data-tip="Circle">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-arrow" data-tool="arrow" data-tip="Arrow">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-line" data-tool="line" data-tip="Line">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+    </button>
+
+    <button class="tb-btn" id="tool-sticky" data-tool="sticky" data-tip="Sticky Note">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h8l6-6V4a2 2 0 00-2-2z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </button>
+  </div>
+
+  <!-- SIZE -->
+  <div class="tb-group">
+    <div class="size-wrap">
+      <span class="size-label">Size</span>
+      <input type="range" class="size-slider" id="size-slider" min="1" max="40" value="3">
+      <div class="size-preview"><div class="size-dot" id="size-dot" style="width:6px;height:6px;"></div></div>
+    </div>
+  </div>
+
+  <!-- COLORS -->
+  <div class="tb-group">
+    <span class="tb-group-label">Color</span>
+    <div class="color-row" id="color-row">
+      <div class="color-swatch active" style="background:#1c1a16" data-color="#1c1a16"></div>
+      <div class="color-swatch" style="background:#f4f0ea" data-color="#f4f0ea"></div>
+      <div class="color-swatch" style="background:#2e7048" data-color="#2e7048"></div>
+      <div class="color-swatch" style="background:#3d6b9e" data-color="#3d6b9e"></div>
+      <div class="color-swatch" style="background:#c0392b" data-color="#c0392b"></div>
+      <div class="color-swatch" style="background:#c8860a" data-color="#c8860a"></div>
+      <div class="color-swatch" style="background:#8b5e3c" data-color="#8b5e3c"></div>
+      <div class="color-swatch" style="background:#6b4e9e" data-color="#6b4e9e"></div>
+      <div class="color-picker-wrap">
+        <div class="color-picker-btn" id="color-picker-btn" title="Custom color"></div>
+        <input type="color" class="hidden-picker" id="color-picker" value="#1c1a16">
+      </div>
+    </div>
+  </div>
+
+  <!-- FILL toggle -->
+  <div class="tb-group">
+    <button class="tb-btn" id="fill-toggle" data-tip="Toggle Fill">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c0-1.1.9-2 2-2h2l7-7-2-2-7 7v2c0 .55.45 1 1 1z"/><path d="M14.5 6.5l3 3"/><path d="M19 2l3 3-9.5 9.5-3-3L19 2z"/><path d="M20 18c0 0 1 1 1 2s-1 2-2 2-2-1-2-2 1-2 1-2l1-3 1 3z" fill="currentColor" opacity="0.5"/></svg>
+    </button>
+  </div>
+
+  <!-- GRID / SNAP -->
+  <div class="tb-group">
+    <button class="grid-toggle on" id="grid-toggle">⊞ Grid</button>
+    <button class="snap-toggle" id="snap-toggle">⌖ Snap</button>
+  </div>
+
+  <!-- ZOOM -->
+  <div class="tb-group">
+    <button class="tb-btn" id="zoom-out-btn" data-tip="Zoom Out (Ctrl+-)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <button class="zoom-level-btn" id="zoom-level-btn" data-tip="Reset Zoom (Ctrl+0)">100%</button>
+    <button class="tb-btn" id="zoom-in-btn" data-tip="Zoom In (Ctrl+=)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <button class="tb-btn" id="fit-btn" data-tip="Fit to Content">
+      <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="tb-group">
+    <button class="tb-btn" id="undo-btn" data-tip="Undo">
+      <svg viewBox="0 0 24 24"><path d="M3 10h10c3.86 0 7 3.14 7 7v1M3 10l5-5M3 10l5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tb-btn" id="redo-btn" data-tip="Redo">
+      <svg viewBox="0 0 24 24"><path d="M21 10H11c-3.86 0-7 3.14-7 7v1M21 10l-5-5M21 10l-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="tb-btn" id="clear-btn" data-tip="Clear All">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>
+    <button class="tb-btn" id="export-btn" data-tip="Export PNG">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- CANVAS AREA -->
+<div class="canvas-wrap" id="canvas-wrap">
+  <canvas id="grid-canvas"></canvas>
+  <canvas id="main-canvas"></canvas>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-item"><div class="status-dot"></div><span id="status-tool">Pen</span></div>
+  <div class="status-item"><span id="status-pos">x: 0  y: 0</span></div>
+  <div class="status-item"><span id="status-zoom">100%</span></div>
+  <div class="status-item"><span id="status-objects">0 objects</span></div>
+  <div class="status-item"><span id="status-grid">Grid: ON</span></div>
+  <div class="status-item"><span id="status-snap">Snap: OFF</span></div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-delete">🗑 Delete</div>
+  <div class="ctx-item" id="ctx-duplicate">⧉ Duplicate</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-front">↑ Bring Forward</div>
+  <div class="ctx-item" id="ctx-back">↓ Send Back</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" id="ctx-clear">✕ Clear All</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+//  WHITEBOARD ENGINE — infinite canvas with pan & zoom
+// ══════════════════════════════════════════════════════════════════════
+
+const GRID_SIZE = 24;
+const MIN_ZOOM  = 0.1;
+const MAX_ZOOM  = 8;
+const ZOOM_STEP = 0.15;
+
+// ── STATE ──
+let tool    = 'pen';
+let color   = '#1c1a16';
+let fillOn  = false;
+let brushSz = 3;
+let gridOn  = true;
+let snapOn  = false;
+let isDark  = false;
+
+// Viewport transform: world → screen =  screenX = worldX * scale + viewX
+let viewX  = 0;
+let viewY  = 0;
+let scale  = 1;
+
+// Objects
+let objects   = [];
+let undoStack = [];
+let redoStack = [];
+
+// Drawing state
+let drawing     = false;
+let startWX, startWY;         // world coords where stroke started
+let currentPath = [];
+let previewObj  = null;
+
+// Selection
+let selectedId = null;
+let isDragging = false;
+let dragStart  = { wx:0, wy:0 };
+
+// Pan state
+let isPanning   = false;
+let panStart    = { x:0, y:0 };
+let panStartView = { x:0, y:0 };
+let spaceDown   = false;
+
+// Canvas elements
+const wrap    = document.getElementById('canvas-wrap');
+const gridCvs = document.getElementById('grid-canvas');
+const mainCvs = document.getElementById('main-canvas');
+const gCtx    = gridCvs.getContext('2d');
+const ctx     = mainCvs.getContext('2d');
+
+// ── UTILS ──
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+function snapW(v) {
+  if (!snapOn) return v;
+  return Math.round(v / GRID_SIZE) * GRID_SIZE;
+}
+
+// Convert screen → world coords
+function screenToWorld(sx, sy) {
+  return { x: (sx - viewX) / scale, y: (sy - viewY) / scale };
+}
+
+// Convert world → screen coords
+function worldToScreen(wx, wy) {
+  return { x: wx * scale + viewX, y: wy * scale + viewY };
+}
+
+function pushUndo() {
+  undoStack.push(JSON.stringify(objects));
+  if (undoStack.length > 80) undoStack.shift();
+  redoStack = [];
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify(objects));
+  objects = JSON.parse(undoStack.pop());
+  selectedId = null; renderAll(); updateStatus();
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify(objects));
+  objects = JSON.parse(redoStack.pop());
+  renderAll(); updateStatus();
+}
+
+// ── ZOOM ──
+function setZoom(newScale, pivotSX, pivotSY) {
+  newScale = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newScale));
+  // Keep pivot point fixed on screen
+  const wx = (pivotSX - viewX) / scale;
+  const wy = (pivotSY - viewY) / scale;
+  scale  = newScale;
+  viewX  = pivotSX - wx * scale;
+  viewY  = pivotSY - wy * scale;
+  updateZoomDisplay();
+  drawGrid(); renderAll(); updateStickyTransform();
+}
+
+function zoomIn()  { setZoom(scale * (1 + ZOOM_STEP), wrap.clientWidth/2, wrap.clientHeight/2); }
+function zoomOut() { setZoom(scale / (1 + ZOOM_STEP), wrap.clientWidth/2, wrap.clientHeight/2); }
+function zoomReset(){ setZoom(1, wrap.clientWidth/2, wrap.clientHeight/2); }
+
+function fitToContent() {
+  if (!objects.length) { setZoom(1, wrap.clientWidth/2, wrap.clientHeight/2); return; }
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for (const obj of objects) {
+    if (obj.type==='stroke'||obj.type==='erase') {
+      for (const p of obj.points) { minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y); }
+    } else if (obj.type==='text') {
+      minX=Math.min(minX,obj.x); minY=Math.min(minY,obj.y);
+      maxX=Math.max(maxX,obj.x+200); maxY=Math.max(maxY,obj.y+30);
+    } else {
+      minX=Math.min(minX,obj.x1,obj.x2); minY=Math.min(minY,obj.y1,obj.y2);
+      maxX=Math.max(maxX,obj.x1,obj.x2); maxY=Math.max(maxY,obj.y1,obj.y2);
+    }
+  }
+  const pad = 60;
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  const fw = maxX-minX+pad*2, fh = maxY-minY+pad*2;
+  const s = Math.min(cw/fw, ch/fh, MAX_ZOOM);
+  scale = s;
+  viewX = (cw - (maxX+minX)*s)/2;
+  viewY = (ch - (maxY+minY)*s)/2;
+  updateZoomDisplay(); drawGrid(); renderAll(); updateStickyTransform();
+}
+
+function updateZoomDisplay() {
+  const pct = Math.round(scale * 100) + '%';
+  document.getElementById('zoom-level-btn').textContent = pct;
+  document.getElementById('status-zoom').textContent = pct;
+}
+
+// ── RESIZE ──
+function resizeCanvases() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  gridCvs.width = mainCvs.width  = w;
+  gridCvs.height= mainCvs.height = h;
+  drawGrid(); renderAll();
+}
+
+// ── GRID ──
+function drawGrid() {
+  const w = gridCvs.width, h = gridCvs.height;
+  gCtx.clearRect(0, 0, w, h);
+  gCtx.fillStyle = isDark ? '#0f1219' : '#fafaf7';
+  gCtx.fillRect(0, 0, w, h);
+  if (!gridOn) return;
+
+  const gs = GRID_SIZE * scale;
+  // Only draw if grid isn't too tiny or huge
+  if (gs < 6 || gs > 200) return;
+
+  const offsetX = ((viewX % gs) + gs) % gs;
+  const offsetY = ((viewY % gs) + gs) % gs;
+
+  gCtx.strokeStyle = isDark ? 'rgba(180,200,220,0.07)' : 'rgba(100,95,85,0.12)';
+  gCtx.lineWidth = 1;
+  for (let x = offsetX; x <= w; x += gs) {
+    gCtx.beginPath(); gCtx.moveTo(x+0.5, 0); gCtx.lineTo(x+0.5, h); gCtx.stroke();
+  }
+  for (let y = offsetY; y <= h; y += gs) {
+    gCtx.beginPath(); gCtx.moveTo(0, y+0.5); gCtx.lineTo(w, y+0.5); gCtx.stroke();
+  }
+}
+
+// ── RENDER ──
+function renderAll() {
+  const w = mainCvs.width, h = mainCvs.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(viewX, viewY);
+  ctx.scale(scale, scale);
+
+  for (const obj of objects) renderObject(obj);
+  if (previewObj) renderObject(previewObj);
+
+  if (selectedId) {
+    const sel = objects.find(o => o.id === selectedId);
+    if (sel) drawSelectionHandle(sel);
+  }
+  ctx.restore();
+}
+
+function renderObject(obj) {
+  ctx.save();
+  ctx.strokeStyle = obj.color || color;
+  ctx.fillStyle   = obj.color || color;
+  ctx.lineWidth   = obj.size  || brushSz;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+
+  switch (obj.type) {
+    case 'stroke':
+      if (!obj.points || obj.points.length < 2) break;
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      for (let i = 1; i < obj.points.length; i++) {
+        const prev = obj.points[i-1], curr = obj.points[i];
+        const mx = (prev.x+curr.x)/2, my = (prev.y+curr.y)/2;
+        ctx.quadraticCurveTo(prev.x, prev.y, mx, my);
+      }
+      ctx.lineTo(obj.points[obj.points.length-1].x, obj.points[obj.points.length-1].y);
+      ctx.stroke(); break;
+
+    case 'erase':
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+      ctx.lineWidth = obj.size || 20;
+      if (!obj.points || obj.points.length < 2) break;
+      ctx.beginPath();
+      ctx.moveTo(obj.points[0].x, obj.points[0].y);
+      for (let i=1;i<obj.points.length;i++) ctx.lineTo(obj.points[i].x, obj.points[i].y);
+      ctx.stroke(); break;
+
+    case 'rect':
+      const rw = obj.x2-obj.x1, rh = obj.y2-obj.y1;
+      if (obj.fill) { ctx.fillStyle=obj.color; ctx.fillRect(obj.x1,obj.y1,rw,rh); }
+      ctx.strokeRect(obj.x1+0.5,obj.y1+0.5,rw,rh); break;
+
+    case 'circle':
+      const rx=Math.abs(obj.x2-obj.x1)/2, ry=Math.abs(obj.y2-obj.y1)/2;
+      const cx=(obj.x1+obj.x2)/2, cy=(obj.y1+obj.y2)/2;
+      ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+      if (obj.fill) ctx.fill(); ctx.stroke(); break;
+
+    case 'line':
+      ctx.beginPath(); ctx.moveTo(obj.x1,obj.y1); ctx.lineTo(obj.x2,obj.y2); ctx.stroke(); break;
+
+    case 'arrow':
+      drawArrow(ctx, obj.x1,obj.y1,obj.x2,obj.y2, obj.size||brushSz, obj.color||color); break;
+
+    case 'text':
+      ctx.font = `${obj.fontSize||14}px 'DM Mono', monospace`;
+      ctx.fillStyle = obj.color; ctx.textBaseline = 'top';
+      (obj.text||'').split('\n').forEach((ln,i) => ctx.fillText(ln, obj.x, obj.y + i*(obj.fontSize||14)*1.5));
+      break;
+  }
+  ctx.restore();
+}
+
+function drawArrow(ctx, x1,y1,x2,y2,sz,clr) {
+  const angle = Math.atan2(y2-y1, x2-x1);
+  const headLen = Math.max(12, sz*4);
+  ctx.save(); ctx.strokeStyle=clr; ctx.fillStyle=clr;
+  ctx.lineWidth=sz; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-headLen*Math.cos(angle-Math.PI/6), y2-headLen*Math.sin(angle-Math.PI/6));
+  ctx.lineTo(x2-headLen*Math.cos(angle+Math.PI/6), y2-headLen*Math.sin(angle+Math.PI/6));
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function drawSelectionHandle(obj) {
+  let bx,by,bw,bh;
+  if (obj.type==='stroke'||obj.type==='erase') {
+    if (!obj.points.length) return;
+    const xs=obj.points.map(p=>p.x), ys=obj.points.map(p=>p.y);
+    bx=Math.min(...xs)-6; by=Math.min(...ys)-6;
+    bw=Math.max(...xs)-bx+12; bh=Math.max(...ys)-by+12;
+  } else if (['rect','circle','line','arrow'].includes(obj.type)) {
+    bx=Math.min(obj.x1,obj.x2)-4; by=Math.min(obj.y1,obj.y2)-4;
+    bw=Math.abs(obj.x2-obj.x1)+8; bh=Math.abs(obj.y2-obj.y1)+8;
+  } else if (obj.type==='text') {
+    ctx.font = `${obj.fontSize||14}px 'DM Mono', monospace`;
+    const lines=(obj.text||'').split('\n');
+    const tw=Math.max(...lines.map(l=>ctx.measureText(l).width));
+    bx=obj.x-4; by=obj.y-4; bw=tw+8; bh=lines.length*(obj.fontSize||14)*1.5+8;
+  } else return;
+
+  ctx.save();
+  ctx.strokeStyle = isDark ? '#4e9e7a' : '#2e7048';
+  ctx.lineWidth = 1.5 / scale;
+  ctx.setLineDash([4/scale, 3/scale]);
+  ctx.strokeRect(bx,by,bw,bh); ctx.setLineDash([]);
+  const hs = 6/scale;
+  [[bx,by],[bx+bw,by],[bx,by+bh],[bx+bw,by+bh]].forEach(([hx,hy]) => {
+    ctx.fillStyle = isDark ? '#4e9e7a' : '#2e7048';
+    ctx.fillRect(hx-hs/2, hy-hs/2, hs, hs);
+  });
+  ctx.restore();
+}
+
+// ── HIT TEST (world coords) ──
+function hitTest(wx, wy) {
+  for (let i=objects.length-1; i>=0; i--) {
+    if (objectHit(objects[i], wx, wy)) return objects[i].id;
+  }
+  return null;
+}
+
+function objectHit(obj, wx, wy) {
+  const PAD = 8/scale;
+  if (obj.type==='stroke'||obj.type==='erase') {
+    return obj.points.some(p => Math.hypot(p.x-wx, p.y-wy) < (obj.size||brushSz)/2 + PAD);
+  }
+  if (['rect','circle','line','arrow'].includes(obj.type)) {
+    const minX=Math.min(obj.x1,obj.x2)-PAD, maxX=Math.max(obj.x1,obj.x2)+PAD;
+    const minY=Math.min(obj.y1,obj.y2)-PAD, maxY=Math.max(obj.y1,obj.y2)+PAD;
+    return wx>=minX&&wx<=maxX&&wy>=minY&&wy<=maxY;
+  }
+  if (obj.type==='text') {
+    ctx.font = `${obj.fontSize||14}px 'DM Mono', monospace`;
+    const lines=(obj.text||'').split('\n');
+    const tw=Math.max(...lines.map(l=>ctx.measureText(l).width));
+    const th=lines.length*(obj.fontSize||14)*1.5;
+    return wx>=obj.x-PAD&&wx<=obj.x+tw+PAD&&wy>=obj.y-PAD&&wy<=obj.y+th+PAD;
+  }
+  return false;
+}
+
+// ── POINTER EVENTS ──
+function getScreenPos(e) {
+  const rect = mainCvs.getBoundingClientRect();
+  const client = e.touches ? e.touches[0] : e;
+  return { x: client.clientX - rect.left, y: client.clientY - rect.top };
+}
+
+function getWorldPos(e) {
+  const sp = getScreenPos(e);
+  const w = screenToWorld(sp.x, sp.y);
+  return { x: snapW(w.x), y: snapW(w.y) };
+}
+
+mainCvs.addEventListener('pointerdown',  onDown);
+mainCvs.addEventListener('pointermove',  onMove);
+mainCvs.addEventListener('pointerup',    onUp);
+mainCvs.addEventListener('pointerleave', onUp);
+mainCvs.addEventListener('contextmenu',  onContext);
+
+// Zoom on scroll
+mainCvs.addEventListener('wheel', e => {
+  e.preventDefault();
+  const sp = getScreenPos(e);
+  if (e.ctrlKey || e.metaKey) {
+    // Pinch-to-zoom
+    const delta = -e.deltaY * 0.005;
+    setZoom(scale * (1 + delta), sp.x, sp.y);
+  } else {
+    // Pan on regular scroll
+    viewX -= e.deltaX; viewY -= e.deltaY;
+    drawGrid(); renderAll(); updateStickyTransform();
+  }
+}, { passive: false });
+
+// Ctrl+scroll zoom (some trackpads send this without ctrlKey)
+mainCvs.addEventListener('wheel', e => {}, { passive: true });
+
+function onDown(e) {
+  e.preventDefault();
+  mainCvs.setPointerCapture(e.pointerId);
+
+  const sp = getScreenPos(e);
+  const wp = getWorldPos(e);
+
+  hideCtxMenu();
+
+  // Middle mouse or Space+drag = pan
+  if (e.button === 1 || spaceDown) {
+    isPanning = true;
+    panStart = { x: e.clientX, y: e.clientY };
+    panStartView = { x: viewX, y: viewY };
+    mainCvs.style.cursor = 'grabbing';
+    return;
+  }
+
+  if (tool === 'select') {
+    const rawW = screenToWorld(sp.x, sp.y);
+    const hit = hitTest(rawW.x, rawW.y);
+    if (hit) {
+      selectedId = hit;
+      isDragging = true;
+      dragStart  = screenToWorld(sp.x, sp.y);
+      objects.forEach(o => {
+        o._ox1=o.x1; o._oy1=o.y1; o._ox2=o.x2; o._oy2=o.y2;
+        if(o.points) o._pts=JSON.parse(JSON.stringify(o.points));
+        if(o.type==='text'){ o._ox=o.x; o._oy=o.y; }
+      });
+    } else {
+      selectedId = null;
+    }
+    renderAll(); return;
+  }
+
+  if (tool === 'text')   { placeTextInput(wp.x, wp.y); return; }
+  if (tool === 'sticky') { placeSticky(wp.x, wp.y); return; }
+
+  drawing = true;
+  startWX = wp.x; startWY = wp.y;
+  if (tool === 'pen' || tool === 'eraser') {
+    currentPath = [{ x: wp.x, y: wp.y }];
+  }
+}
+
+function onMove(e) {
+  e.preventDefault();
+  const sp = getScreenPos(e);
+  const wp = getWorldPos(e);
+  const rawW = screenToWorld(sp.x, sp.y);
+
+  document.getElementById('status-pos').textContent = `x: ${Math.round(rawW.x)}  y: ${Math.round(rawW.y)}`;
+
+  if (isPanning) {
+    viewX = panStartView.x + (e.clientX - panStart.x);
+    viewY = panStartView.y + (e.clientY - panStart.y);
+    drawGrid(); renderAll(); updateStickyTransform(); return;
+  }
+
+  if (tool === 'select' && isDragging && selectedId) {
+    const curW = screenToWorld(sp.x, sp.y);
+    const dx = curW.x - dragStart.x, dy = curW.y - dragStart.y;
+    const obj = objects.find(o=>o.id===selectedId);
+    if (!obj) return;
+    if (obj.type==='text') { obj.x=(obj._ox||0)+dx; obj.y=(obj._oy||0)+dy; }
+    else if (obj.type==='stroke'||obj.type==='erase') {
+      obj.points=(obj._pts||[]).map(p=>({x:p.x+dx,y:p.y+dy}));
+    } else { obj.x1=(obj._ox1||0)+dx; obj.y1=(obj._oy1||0)+dy; obj.x2=(obj._ox2||0)+dx; obj.y2=(obj._oy2||0)+dy; }
+    renderAll(); return;
+  }
+
+  if (!drawing) return;
+
+  if (tool==='pen'||tool==='eraser') {
+    const last = currentPath[currentPath.length-1];
+    if (Math.hypot(wp.x-last.x, wp.y-last.y) > 2/scale) {
+      currentPath.push({x:wp.x, y:wp.y});
+    }
+    previewObj = { type: tool==='eraser'?'erase':'stroke', id:'__preview__', points:currentPath, color, size:brushSz };
+    renderAll(); previewObj=null; return;
+  }
+
+  previewObj = buildShapeObj(startWX, startWY, wp.x, wp.y, '__preview__');
+  renderAll();
+}
+
+function onUp(e) {
+  if (isPanning) {
+    isPanning = false;
+    mainCvs.style.cursor = spaceDown ? 'grab' : (tool==='eraser'?'cell':tool==='select'?'default':tool==='text'?'text':'crosshair');
+    return;
+  }
+
+  if (tool==='select' && isDragging) {
+    isDragging = false;
+    objects.forEach(o => { delete o._ox1;delete o._oy1;delete o._ox2;delete o._oy2;delete o._pts;delete o._ox;delete o._oy; });
+    pushUndo(); return;
+  }
+
+  if (!drawing) return;
+  const wp = getWorldPos(e);
+  drawing=false; previewObj=null; pushUndo();
+
+  if (tool==='pen') {
+    if (currentPath.length<2) return;
+    objects.push({id:uid(),type:'stroke',points:[...currentPath],color,size:brushSz});
+  } else if (tool==='eraser') {
+    if (currentPath.length<2) return;
+    objects.push({id:uid(),type:'erase',points:[...currentPath],size:brushSz*3});
+  } else {
+    const obj = buildShapeObj(startWX, startWY, wp.x, wp.y, uid());
+    if (obj) objects.push(obj);
+  }
+  currentPath=[]; renderAll(); updateStatus();
+}
+
+function buildShapeObj(x1,y1,x2,y2,id) {
+  const base = {id,x1,y1,x2,y2,color,size:brushSz,fill:fillOn};
+  switch(tool) {
+    case 'rect':   return {...base,type:'rect'};
+    case 'circle': return {...base,type:'circle'};
+    case 'arrow':  return {...base,type:'arrow',fill:false};
+    case 'line':   return {...base,type:'line',fill:false};
+    default: return null;
+  }
+}
+
+// Space bar for pan mode
+document.addEventListener('keydown', e => {
+  if ((e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT') && e.key!==' ') return;
+  if (e.key===' ' && !spaceDown) {
+    spaceDown = true;
+    if (!isPanning) mainCvs.style.cursor = 'grab';
+    e.preventDefault();
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key===' ') {
+    spaceDown = false;
+    if (!isPanning) mainCvs.style.cursor = tool==='eraser'?'cell':tool==='select'?'default':tool==='text'?'text':'crosshair';
+  }
+});
+
+// ── TEXT INPUT ──
+function placeTextInput(wx, wy) {
+  const ta = document.createElement('textarea');
+  ta.className = 'text-input-overlay';
+  const sp = worldToScreen(wx, wy);
+  ta.style.left = sp.x + 'px';
+  ta.style.top  = sp.y + 'px';
+  ta.style.color = color;
+  ta.style.fontSize = Math.max(12, brushSz*3) * scale + 'px';
+  wrap.appendChild(ta); ta.focus();
+
+  function commit() {
+    const text = ta.value.trim();
+    if (text) {
+      pushUndo();
+      objects.push({id:uid(),type:'text',x:wx,y:wy,text,color,fontSize:Math.max(12,brushSz*3)});
+      renderAll(); updateStatus();
+    }
+    ta.remove();
+  }
+  ta.addEventListener('keydown', e => {
+    if (e.key==='Escape') { ta.remove(); return; }
+    if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); commit(); }
+    setTimeout(()=>{ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; },0);
+  });
+  ta.addEventListener('blur', commit);
+}
+
+// ── STICKY NOTES ──
+// Stickies are stored as DOM elements positioned in world space, then CSS-transformed
+const STICKY_COLORS = ['#fef3c7','#d1fae5','#dbeafe','#fce7f3','#ede9fe','#ffedd5'];
+let stickyColorIdx = 0;
+
+function updateStickyTransform() {
+  wrap.querySelectorAll('.sticky').forEach(s => {
+    const wx = parseFloat(s.dataset.wx), wy = parseFloat(s.dataset.wy);
+    const sp = worldToScreen(wx, wy);
+    s.style.left = sp.x + 'px';
+    s.style.top  = sp.y + 'px';
+    s.style.transform = `scale(${scale})`;
+    s.style.transformOrigin = 'top left';
+  });
+}
+
+function placeSticky(wx, wy) {
+  const div = document.createElement('div');
+  div.className = 'sticky';
+  const sc = STICKY_COLORS[stickyColorIdx++ % STICKY_COLORS.length];
+  div.style.background = sc;
+  div.dataset.wx = wx;
+  div.dataset.wy = wy;
+  div.dataset.id = uid();
+
+  const sp = worldToScreen(wx, wy);
+  div.style.left = sp.x + 'px';
+  div.style.top  = sp.y + 'px';
+  div.style.transform = `scale(${scale})`;
+  div.style.transformOrigin = 'top left';
+
+  div.innerHTML = `<div class="sticky-header"><button class="sticky-close" onclick="this.closest('.sticky').remove()">✕</button></div><textarea placeholder="Type a note..." rows="4"></textarea>`;
+
+  // Drag in world space
+  let draggingSticky=false, ox, oy;
+  div.addEventListener('pointerdown', e => {
+    if (e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON') return;
+    draggingSticky=true;
+    const sp = getScreenPos(e);
+    const wpos = screenToWorld(sp.x, sp.y);
+    ox = wpos.x - parseFloat(div.dataset.wx);
+    oy = wpos.y - parseFloat(div.dataset.wy);
+    div.setPointerCapture(e.pointerId);
+    e.stopPropagation();
+  });
+  div.addEventListener('pointermove', e => {
+    if (!draggingSticky) return;
+    const sp = getScreenPos(e);
+    const wpos = screenToWorld(sp.x, sp.y);
+    div.dataset.wx = wpos.x - ox;
+    div.dataset.wy = wpos.y - oy;
+    updateStickyTransform();
+  });
+  div.addEventListener('pointerup', ()=>{ draggingSticky=false; });
+
+  const ta = div.querySelector('textarea');
+  ta.addEventListener('input', ()=>{ ta.style.height='auto'; ta.style.height=ta.scrollHeight+'px'; });
+
+  wrap.appendChild(div); ta.focus();
+}
+
+// ── CONTEXT MENU ──
+function onContext(e) {
+  e.preventDefault();
+  const sp = getScreenPos(e);
+  const wp = screenToWorld(sp.x, sp.y);
+  const hit = hitTest(wp.x, wp.y);
+  if (!hit) return;
+  selectedId=hit; renderAll();
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display='block'; menu.style.left=e.clientX+'px'; menu.style.top=e.clientY+'px';
+  const rect = menu.getBoundingClientRect();
+  if (rect.right>window.innerWidth)   menu.style.left=(e.clientX-rect.width)+'px';
+  if (rect.bottom>window.innerHeight) menu.style.top=(e.clientY-rect.height)+'px';
+}
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display='none'; }
+document.addEventListener('click', hideCtxMenu);
+document.addEventListener('keydown', e => { if(e.key==='Escape') hideCtxMenu(); });
+
+document.getElementById('ctx-delete').onclick = () => {
+  if(!selectedId) return;
+  pushUndo(); objects=objects.filter(o=>o.id!==selectedId); selectedId=null; renderAll(); updateStatus();
+};
+document.getElementById('ctx-duplicate').onclick = () => {
+  if(!selectedId) return;
+  const obj=objects.find(o=>o.id===selectedId); if(!obj) return;
+  const copy=JSON.parse(JSON.stringify(obj)); copy.id=uid();
+  if(copy.x1!==undefined){copy.x1+=20;copy.y1+=20;copy.x2+=20;copy.y2+=20;}
+  if(copy.x!==undefined){copy.x+=20;copy.y+=20;}
+  if(copy.points) copy.points=copy.points.map(p=>({x:p.x+20,y:p.y+20}));
+  pushUndo(); objects.push(copy); selectedId=copy.id; renderAll(); updateStatus();
+};
+document.getElementById('ctx-front').onclick = () => {
+  if(!selectedId) return;
+  const i=objects.findIndex(o=>o.id===selectedId);
+  if(i<objects.length-1){objects.push(objects.splice(i,1)[0]);pushUndo();renderAll();}
+};
+document.getElementById('ctx-back').onclick = () => {
+  if(!selectedId) return;
+  const i=objects.findIndex(o=>o.id===selectedId);
+  if(i>0){objects.unshift(objects.splice(i,1)[0]);pushUndo();renderAll();}
+};
+document.getElementById('ctx-clear').onclick = () => {
+  if(!confirm('Clear entire canvas?')) return;
+  pushUndo(); objects=[]; selectedId=null;
+  wrap.querySelectorAll('.sticky').forEach(s=>s.remove());
+  renderAll(); updateStatus();
+};
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT') return;
+  const k = e.key.toLowerCase();
+
+  const toolKeys={p:'pen',e:'eraser',s:'select',t:'text',r:'rect',c:'circle',a:'arrow',l:'line',n:'sticky'};
+  if (toolKeys[k]&&!e.ctrlKey&&!e.metaKey) { setTool(toolKeys[k]); return; }
+
+  if ((e.ctrlKey||e.metaKey)&&k==='z'&&!e.shiftKey) { e.preventDefault(); undo(); return; }
+  if ((e.ctrlKey||e.metaKey)&&(k==='y'||(k==='z'&&e.shiftKey))) { e.preventDefault(); redo(); return; }
+  if ((e.ctrlKey||e.metaKey)&&k==='a') { e.preventDefault(); if(objects.length){selectedId=objects[objects.length-1].id;renderAll();} return; }
+  if (k==='delete'||k==='backspace') {
+    if(selectedId){pushUndo();objects=objects.filter(o=>o.id!==selectedId);selectedId=null;renderAll();updateStatus();}
+  }
+  if (k==='g') document.getElementById('grid-toggle').click();
+  if (k==='f') document.getElementById('fill-toggle').click();
+
+  // Zoom shortcuts
+  if ((e.ctrlKey||e.metaKey)&&(k==='='||k==='+')) { e.preventDefault(); zoomIn(); }
+  if ((e.ctrlKey||e.metaKey)&&k==='-') { e.preventDefault(); zoomOut(); }
+  if ((e.ctrlKey||e.metaKey)&&k==='0') { e.preventDefault(); zoomReset(); }
+});
+
+// ── TOOLBAR CONTROLS ──
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('.tb-btn[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));
+  if (!isPanning) mainCvs.style.cursor = t==='eraser'?'cell':t==='select'?'default':t==='text'?'text':'crosshair';
+  document.getElementById('status-tool').textContent = t.charAt(0).toUpperCase()+t.slice(1);
+}
+document.querySelectorAll('.tb-btn[data-tool]').forEach(btn=>btn.addEventListener('click',()=>setTool(btn.dataset.tool)));
+
+// Size
+const sizeSlider=document.getElementById('size-slider'), sizeDot=document.getElementById('size-dot');
+sizeSlider.addEventListener('input',()=>{
+  brushSz=parseInt(sizeSlider.value);
+  const px=Math.max(2,Math.min(30,brushSz*1.5));
+  sizeDot.style.width=sizeDot.style.height=px+'px';
+});
+
+// Colors
+document.querySelectorAll('.color-swatch').forEach(sw=>sw.addEventListener('click',()=>{
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+  sw.classList.add('active'); color=sw.dataset.color;
+}));
+const pickerBtn=document.getElementById('color-picker-btn'), picker=document.getElementById('color-picker');
+pickerBtn.addEventListener('click',()=>picker.click());
+picker.addEventListener('input',()=>{
+  color=picker.value; pickerBtn.style.background=color;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+});
+
+// Fill
+document.getElementById('fill-toggle').addEventListener('click',function(){
+  fillOn=!fillOn; this.classList.toggle('active',fillOn); this.dataset.tip=fillOn?'Fill: ON':'Fill: OFF';
+});
+
+// Grid
+document.getElementById('grid-toggle').addEventListener('click',function(){
+  gridOn=!gridOn; this.classList.toggle('on',gridOn); drawGrid();
+  document.getElementById('status-grid').textContent=`Grid: ${gridOn?'ON':'OFF'}`;
+});
+
+// Snap
+document.getElementById('snap-toggle').addEventListener('click',function(){
+  snapOn=!snapOn; this.classList.toggle('on',snapOn);
+  document.getElementById('status-snap').textContent=`Snap: ${snapOn?'ON':'OFF'}`;
+});
+
+// Undo/Redo/Clear
+document.getElementById('undo-btn').addEventListener('click',undo);
+document.getElementById('redo-btn').addEventListener('click',redo);
+document.getElementById('clear-btn').addEventListener('click',()=>{
+  if(!confirm('Clear the entire canvas?')) return;
+  pushUndo(); objects=[]; selectedId=null;
+  wrap.querySelectorAll('.sticky').forEach(s=>s.remove());
+  renderAll(); updateStatus();
+});
+
+// Zoom buttons
+document.getElementById('zoom-in-btn').addEventListener('click', zoomIn);
+document.getElementById('zoom-out-btn').addEventListener('click', zoomOut);
+document.getElementById('zoom-level-btn').addEventListener('click', zoomReset);
+document.getElementById('fit-btn').addEventListener('click', fitToContent);
+
+// ── EXPORT ──
+// Renders the bounding box of all content at full 1:1 world scale
+document.getElementById('export-btn').addEventListener('click', () => {
+  // Find content bounds in world space
+  let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
+  let hasContent = false;
+
+  for (const obj of objects) {
+    hasContent = true;
+    if (obj.type==='stroke'||obj.type==='erase') {
+      for (const p of obj.points) { minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y); }
+    } else if (obj.type==='text') {
+      minX=Math.min(minX,obj.x);minY=Math.min(minY,obj.y);maxX=Math.max(maxX,obj.x+300);maxY=Math.max(maxY,obj.y+50);
+    } else {
+      minX=Math.min(minX,obj.x1,obj.x2);minY=Math.min(minY,obj.y1,obj.y2);
+      maxX=Math.max(maxX,obj.x1,obj.x2);maxY=Math.max(maxY,obj.y1,obj.y2);
+    }
+  }
+
+  // Include stickies
+  wrap.querySelectorAll('.sticky').forEach(s => {
+    hasContent = true;
+    const wx=parseFloat(s.dataset.wx), wy=parseFloat(s.dataset.wy);
+    const sw=s.offsetWidth, sh=s.offsetHeight;
+    minX=Math.min(minX,wx);minY=Math.min(minY,wy);
+    maxX=Math.max(maxX,wx+sw);maxY=Math.max(maxY,wy+sh);
+  });
+
+  // Fall back to viewport if no content
+  if (!hasContent) {
+    minX=screenToWorld(0,0).x; minY=screenToWorld(0,0).y;
+    maxX=screenToWorld(wrap.clientWidth,0).x; maxY=screenToWorld(0,wrap.clientHeight).y;
+  }
+
+  const PAD = 40;
+  minX-=PAD; minY-=PAD; maxX+=PAD; maxY+=PAD;
+  const ew = Math.round(maxX-minX), eh = Math.round(maxY-minY);
+
+  const ex = document.createElement('canvas');
+  ex.width = ew; ex.height = eh;
+  const ec = ex.getContext('2d');
+
+  // Background
+  ec.fillStyle = isDark ? '#0f1219' : '#fafaf7';
+  ec.fillRect(0,0,ew,eh);
+
+  // Grid
+  if (gridOn) {
+    ec.strokeStyle = isDark ? 'rgba(180,200,220,0.07)' : 'rgba(100,95,85,0.12)';
+    ec.lineWidth=1;
+    const ox=(((-minX)%GRID_SIZE)+GRID_SIZE)%GRID_SIZE;
+    const oy=(((-minY)%GRID_SIZE)+GRID_SIZE)%GRID_SIZE;
+    for(let x=ox;x<=ew;x+=GRID_SIZE){ec.beginPath();ec.moveTo(x+0.5,0);ec.lineTo(x+0.5,eh);ec.stroke();}
+    for(let y=oy;y<=eh;y+=GRID_SIZE){ec.beginPath();ec.moveTo(0,y+0.5);ec.lineTo(ew,y+0.5);ec.stroke();}
+  }
+
+  // Draw all objects offset by -minX, -minY
+  ec.save(); ec.translate(-minX, -minY);
+  for (const obj of objects) {
+    ec.save();
+    ec.strokeStyle=obj.color||color; ec.fillStyle=obj.color||color;
+    ec.lineWidth=obj.size||brushSz; ec.lineCap='round'; ec.lineJoin='round';
+    switch(obj.type) {
+      case 'stroke':
+        if(!obj.points||obj.points.length<2) break;
+        ec.beginPath(); ec.moveTo(obj.points[0].x,obj.points[0].y);
+        for(let i=1;i<obj.points.length;i++){
+          const prev=obj.points[i-1],curr=obj.points[i];
+          ec.quadraticCurveTo(prev.x,prev.y,(prev.x+curr.x)/2,(prev.y+curr.y)/2);
+        }
+        ec.lineTo(obj.points[obj.points.length-1].x,obj.points[obj.points.length-1].y);
+        ec.stroke(); break;
+      case 'erase':
+        ec.globalCompositeOperation='destination-out'; ec.strokeStyle='rgba(0,0,0,1)';
+        ec.lineWidth=obj.size||20;
+        if(!obj.points||obj.points.length<2) break;
+        ec.beginPath(); ec.moveTo(obj.points[0].x,obj.points[0].y);
+        for(let i=1;i<obj.points.length;i++) ec.lineTo(obj.points[i].x,obj.points[i].y);
+        ec.stroke(); ec.globalCompositeOperation='source-over'; break;
+      case 'rect':
+        if(obj.fill){ec.fillStyle=obj.color;ec.fillRect(obj.x1,obj.y1,obj.x2-obj.x1,obj.y2-obj.y1);}
+        ec.strokeRect(obj.x1+0.5,obj.y1+0.5,obj.x2-obj.x1,obj.y2-obj.y1); break;
+      case 'circle':
+        const rx=Math.abs(obj.x2-obj.x1)/2,ry=Math.abs(obj.y2-obj.y1)/2;
+        const cxx=(obj.x1+obj.x2)/2,cyy=(obj.y1+obj.y2)/2;
+        ec.beginPath();ec.ellipse(cxx,cyy,rx,ry,0,0,Math.PI*2);
+        if(obj.fill)ec.fill();ec.stroke();break;
+      case 'line':
+        ec.beginPath();ec.moveTo(obj.x1,obj.y1);ec.lineTo(obj.x2,obj.y2);ec.stroke();break;
+      case 'arrow':
+        const ang=Math.atan2(obj.y2-obj.y1,obj.x2-obj.x1),hl=Math.max(12,(obj.size||brushSz)*4);
+        ec.beginPath();ec.moveTo(obj.x1,obj.y1);ec.lineTo(obj.x2,obj.y2);ec.stroke();
+        ec.beginPath();ec.moveTo(obj.x2,obj.y2);
+        ec.lineTo(obj.x2-hl*Math.cos(ang-Math.PI/6),obj.y2-hl*Math.sin(ang-Math.PI/6));
+        ec.lineTo(obj.x2-hl*Math.cos(ang+Math.PI/6),obj.y2-hl*Math.sin(ang+Math.PI/6));
+        ec.closePath();ec.fill();break;
+      case 'text':
+        ec.font=`${obj.fontSize||14}px 'DM Mono',monospace`;
+        ec.fillStyle=obj.color;ec.textBaseline='top';
+        (obj.text||'').split('\n').forEach((ln,i)=>ec.fillText(ln,obj.x,obj.y+i*(obj.fontSize||14)*1.5));break;
+    }
+    ec.restore();
+  }
+
+  // Stickies
+  wrap.querySelectorAll('.sticky').forEach(s => {
+    const wx=parseFloat(s.dataset.wx), wy=parseFloat(s.dataset.wy);
+    const sw=s.offsetWidth, sh=s.offsetHeight;
+    ec.fillStyle=s.style.background||'#fef3c7';
+    ec.fillRect(wx,wy,sw,sh);
+    ec.strokeStyle='rgba(0,0,0,0.12)';ec.lineWidth=1;ec.strokeRect(wx,wy,sw,sh);
+    const ta=s.querySelector('textarea');
+    if(ta&&ta.value){
+      ec.fillStyle='#1c1a16';ec.font="12px 'DM Mono',monospace";ec.textBaseline='top';
+      ta.value.split('\n').forEach((ln,i)=>ec.fillText(ln,wx+10,wy+32+i*18));
+    }
+  });
+  ec.restore();
+
+  const a = document.createElement('a');
+  a.download = `whiteboard-${new Date().toISOString().slice(0,10)}.png`;
+  a.href = ex.toDataURL('image/png'); a.click();
+});
+
+// ── STATUS ──
+function updateStatus() {
+  const count=objects.filter(o=>o.type!=='erase').length;
+  document.getElementById('status-objects').textContent=`${count} object${count!==1?'s':''}`;
+}
+
+// ── DARK MODE ──
+(function() {
+  const btn=document.getElementById('dark-toggle');
+  const icon=document.getElementById('toggle-icon');
+  const label=document.getElementById('toggle-label');
+  function setDark(on) {
+    isDark=on; document.body.classList.toggle('dark',on);
+    icon.textContent=on?'☀':'☽'; label.textContent=on?'Light':'Dark';
+    gridCvs.style.background=on?'#0f1219':'#fafaf7';
+    drawGrid(); renderAll();
+    try{localStorage.setItem('ks_dark_mode',on?'1':'0');}catch(e){}
+  }
+  try{if(localStorage.getItem('ks_dark_mode')==='1')setDark(true);}catch(e){}
+  btn.addEventListener('click',()=>setDark(!document.body.classList.contains('dark')));
+})();
+
+// ── INIT ──
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+setTool('pen');
+updateZoomDisplay();
+
+// Welcome hint
+setTimeout(() => {
+  const hint = document.createElement('div');
+  hint.style.cssText=`position:absolute;bottom:48px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);z-index:50;pointer-events:none;animation:fadeHint 5s ease forwards;white-space:nowrap;`;
+  hint.textContent='Scroll to pan · Ctrl+Scroll or ⊕/⊖ to zoom · Space+Drag to pan · Ctrl+0 to reset';
+  const style=document.createElement('style');
+  style.textContent=`@keyframes fadeHint{0%{opacity:0;transform:translateX(-50%) translateY(8px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0}}`;
+  document.head.appendChild(style);
+  wrap.appendChild(hint);
+  setTimeout(()=>hint.remove(),5500);
+},600);
+</script>
+
+</body>
+</html>
