@@ -457,6 +457,15 @@ canvas { max-width: 100%; }
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 200;
 }
+/* Bridge on the parent keeps hover alive across the gap — unaffected by dropdown's translateY */
+.nav-toolbox::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
 .nav-toolbox:hover .toolbox-dropdown { opacity: 1; pointer-events: auto; transform: translateY(0); }
 body.dark .toolbox-dropdown { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
 .toolbox-dropdown a {

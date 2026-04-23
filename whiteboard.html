@@ -126,10 +126,11 @@ nav {
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 200;
 }
-.toolbox-dropdown::before {
+/* Bridge on the parent keeps hover alive across the gap */
+.nav-toolbox::after {
   content: '';
   position: absolute;
-  top: -12px;
+  top: 100%;
   left: 0;
   right: 0;
   height: 12px;
@@ -373,6 +374,51 @@ input[type="color"].hidden-picker {
 
 /* Undo/redo btns in toolbar */
 .tb-btn[data-tip="Undo"], .tb-btn[data-tip="Redo"] { font-size: 13px; }
+
+/* ── MINIMAP ── */
+.minimap {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 180px;
+  height: 120px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+  z-index: 50;
+  overflow: hidden;
+  cursor: crosshair;
+  transition: opacity 0.2s;
+}
+body.dark .minimap { box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+.minimap:hover { opacity: 1 !important; }
+#minimap-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.minimap-viewport {
+  position: absolute;
+  border: 1.5px solid var(--green);
+  border-radius: 2px;
+  background: rgba(46,112,72,0.08);
+  pointer-events: none;
+}
+body.dark .minimap-viewport {
+  border-color: #4e9e7a;
+  background: rgba(78,158,122,0.1);
+}
+.minimap-label {
+  position: absolute;
+  top: 5px; left: 7px;
+  font-size: 8px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--t3);
+  pointer-events: none;
+  user-select: none;
+}
 </style>
 </head>
 <body>
@@ -520,6 +566,12 @@ input[type="color"].hidden-picker {
 <div class="canvas-wrap" id="canvas-wrap">
   <canvas id="grid-canvas"></canvas>
   <canvas id="main-canvas"></canvas>
+  <!-- MINIMAP -->
+  <div class="minimap" id="minimap">
+    <canvas id="minimap-canvas"></canvas>
+    <div class="minimap-viewport" id="minimap-viewport"></div>
+    <span class="minimap-label">Overview</span>
+  </div>
 </div>
 
 <!-- STATUS BAR -->
@@ -624,14 +676,14 @@ function undo() {
   if (!undoStack.length) return;
   redoStack.push(JSON.stringify(objects));
   objects = JSON.parse(undoStack.pop());
-  selectedId = null; renderAll(); updateStatus();
+  selectedId = null; renderAll(); updateStatus(); renderMinimap();
 }
 
 function redo() {
   if (!redoStack.length) return;
   undoStack.push(JSON.stringify(objects));
   objects = JSON.parse(redoStack.pop());
-  renderAll(); updateStatus();
+  renderAll(); updateStatus(); renderMinimap();
 }
 
 // ── ZOOM ──
@@ -644,7 +696,7 @@ function setZoom(newScale, pivotSX, pivotSY) {
   viewX  = pivotSX - wx * scale;
   viewY  = pivotSY - wy * scale;
   updateZoomDisplay();
-  drawGrid(); renderAll(); updateStickyTransform();
+  drawGrid(); renderAll(); updateStickyTransform(); renderMinimap();
 }
 
 function zoomIn()  { setZoom(scale * (1 + ZOOM_STEP), wrap.clientWidth/2, wrap.clientHeight/2); }
@@ -672,7 +724,7 @@ function fitToContent() {
   scale = s;
   viewX = (cw - (maxX+minX)*s)/2;
   viewY = (ch - (maxY+minY)*s)/2;
-  updateZoomDisplay(); drawGrid(); renderAll(); updateStickyTransform();
+  updateZoomDisplay(); drawGrid(); renderAll(); updateStickyTransform(); renderMinimap();
 }
 
 function updateZoomDisplay() {
@@ -686,7 +738,7 @@ function resizeCanvases() {
   const w = wrap.clientWidth, h = wrap.clientHeight;
   gridCvs.width = mainCvs.width  = w;
   gridCvs.height= mainCvs.height = h;
-  drawGrid(); renderAll();
+  drawGrid(); renderAll(); renderMinimap();
 }
 
 // ── GRID ──
@@ -889,7 +941,7 @@ mainCvs.addEventListener('wheel', e => {
   } else {
     // Pan on regular scroll
     viewX -= e.deltaX; viewY -= e.deltaY;
-    drawGrid(); renderAll(); updateStickyTransform();
+    drawGrid(); renderAll(); updateStickyTransform(); renderMinimap();
   }
 }, { passive: false });
 
@@ -953,7 +1005,7 @@ function onMove(e) {
   if (isPanning) {
     viewX = panStartView.x + (e.clientX - panStart.x);
     viewY = panStartView.y + (e.clientY - panStart.y);
-    drawGrid(); renderAll(); updateStickyTransform(); return;
+    drawGrid(); renderAll(); updateStickyTransform(); renderMinimap(); return;
   }
 
   if (tool === 'select' && isDragging && selectedId) {
@@ -1010,7 +1062,7 @@ function onUp(e) {
     const obj = buildShapeObj(startWX, startWY, wp.x, wp.y, uid());
     if (obj) objects.push(obj);
   }
-  currentPath=[]; renderAll(); updateStatus();
+  currentPath=[]; renderAll(); updateStatus(); renderMinimap();
 }
 
 function buildShapeObj(x1,y1,x2,y2,id) {
@@ -1174,7 +1226,7 @@ document.getElementById('ctx-clear').onclick = () => {
   if(!confirm('Clear entire canvas?')) return;
   pushUndo(); objects=[]; selectedId=null;
   wrap.querySelectorAll('.sticky').forEach(s=>s.remove());
-  renderAll(); updateStatus();
+  renderAll(); updateStatus(); renderMinimap();
 };
 
 // ── KEYBOARD SHORTCUTS ──
@@ -1253,7 +1305,7 @@ document.getElementById('clear-btn').addEventListener('click',()=>{
   if(!confirm('Clear the entire canvas?')) return;
   pushUndo(); objects=[]; selectedId=null;
   wrap.querySelectorAll('.sticky').forEach(s=>s.remove());
-  renderAll(); updateStatus();
+  renderAll(); updateStatus(); renderMinimap();
 });
 
 // Zoom buttons
@@ -1401,18 +1453,160 @@ function updateStatus() {
     isDark=on; document.body.classList.toggle('dark',on);
     icon.textContent=on?'☀':'☽'; label.textContent=on?'Light':'Dark';
     gridCvs.style.background=on?'#0f1219':'#fafaf7';
-    drawGrid(); renderAll();
+    drawGrid(); renderAll(); renderMinimap();
     try{localStorage.setItem('ks_dark_mode',on?'1':'0');}catch(e){}
   }
   try{if(localStorage.getItem('ks_dark_mode')==='1')setDark(true);}catch(e){}
   btn.addEventListener('click',()=>setDark(!document.body.classList.contains('dark')));
 })();
 
+// ── MINIMAP ──
+const minimap     = document.getElementById('minimap');
+const minimapCvs  = document.getElementById('minimap-canvas');
+const minimapCtx  = minimapCvs.getContext('2d');
+const mmViewport  = document.getElementById('minimap-viewport');
+const MM_W = 180, MM_H = 120;
+const WORLD_PAD   = 400;  // padding around content in world coords
+const WORLD_SIZE  = 4000; // default world extent if no content
+
+let mmDragging = false;
+
+function getWorldBounds() {
+  // Bounding box of all objects + generous padding, min WORLD_SIZE
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  for (const obj of objects) {
+    if (obj.type==='stroke'||obj.type==='erase') {
+      for (const p of obj.points) { minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y); }
+    } else if (obj.type==='text') {
+      minX=Math.min(minX,obj.x);minY=Math.min(minY,obj.y);maxX=Math.max(maxX,obj.x+200);maxY=Math.max(maxY,obj.y+30);
+    } else {
+      minX=Math.min(minX,obj.x1,obj.x2);minY=Math.min(minY,obj.y1,obj.y2);
+      maxX=Math.max(maxX,obj.x1,obj.x2);maxY=Math.max(maxY,obj.y1,obj.y2);
+    }
+  }
+  // Also include viewport origin so the minimap always shows where you are
+  const vpMinX = -viewX / scale, vpMinY = -viewY / scale;
+  const vpMaxX = vpMinX + wrap.clientWidth / scale;
+  const vpMaxY = vpMinY + wrap.clientHeight / scale;
+  minX = Math.min(isFinite(minX)?minX:0, vpMinX) - WORLD_PAD;
+  minY = Math.min(isFinite(minY)?minY:0, vpMinY) - WORLD_PAD;
+  maxX = Math.max(isFinite(maxX)?maxX:0, vpMaxX) + WORLD_PAD;
+  maxY = Math.max(isFinite(maxY)?maxY:0, vpMaxY) + WORLD_PAD;
+  // Enforce minimum world size
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+  const hw=Math.max((maxX-minX)/2, WORLD_SIZE/2), hh=Math.max((maxY-minY)/2, WORLD_SIZE/2);
+  return { minX:cx-hw, minY:cy-hh, maxX:cx+hw, maxY:cy+hh,
+           w:hw*2, h:hh*2 };
+}
+
+function renderMinimap() {
+  minimapCvs.width  = MM_W;
+  minimapCvs.height = MM_H;
+
+  const wb = getWorldBounds();
+  const scaleX = MM_W / wb.w;
+  const scaleY = MM_H / wb.h;
+
+  // Background
+  minimapCtx.fillStyle = isDark ? '#0f1219' : '#fafaf7';
+  minimapCtx.fillRect(0, 0, MM_W, MM_H);
+
+  // Subtle grid
+  minimapCtx.strokeStyle = isDark ? 'rgba(180,200,220,0.04)' : 'rgba(100,95,85,0.07)';
+  minimapCtx.lineWidth = 0.5;
+  const gs = GRID_SIZE * scaleX;
+  if (gs > 3) {
+    const ox = ((-wb.minX * scaleX) % gs + gs) % gs;
+    const oy = ((-wb.minY * scaleY) % gs + gs) % gs;
+    for (let x=ox; x<MM_W; x+=gs) { minimapCtx.beginPath();minimapCtx.moveTo(x,0);minimapCtx.lineTo(x,MM_H);minimapCtx.stroke(); }
+    for (let y=oy; y<MM_H; y+=gs) { minimapCtx.beginPath();minimapCtx.moveTo(0,y);minimapCtx.lineTo(MM_W,y);minimapCtx.stroke(); }
+  }
+
+  // Draw objects scaled to minimap
+  minimapCtx.save();
+  minimapCtx.translate(-wb.minX * scaleX, -wb.minY * scaleY);
+  minimapCtx.scale(scaleX, scaleY);
+
+  for (const obj of objects) {
+    if (obj.type === 'erase') continue; // skip erasures — too complex at tiny scale
+    minimapCtx.save();
+    minimapCtx.strokeStyle = obj.color || '#1c1a16';
+    minimapCtx.fillStyle   = obj.color || '#1c1a16';
+    minimapCtx.lineWidth   = Math.max(obj.size||2, 2);
+    minimapCtx.lineCap = 'round'; minimapCtx.lineJoin = 'round';
+
+    switch (obj.type) {
+      case 'stroke':
+        if (!obj.points||obj.points.length<2) break;
+        minimapCtx.beginPath();
+        minimapCtx.moveTo(obj.points[0].x, obj.points[0].y);
+        for (let i=1;i<obj.points.length;i++) minimapCtx.lineTo(obj.points[i].x, obj.points[i].y);
+        minimapCtx.stroke(); break;
+      case 'rect':
+        if (obj.fill) { minimapCtx.fillRect(obj.x1,obj.y1,obj.x2-obj.x1,obj.y2-obj.y1); }
+        minimapCtx.strokeRect(obj.x1,obj.y1,obj.x2-obj.x1,obj.y2-obj.y1); break;
+      case 'circle':
+        const rx=Math.abs(obj.x2-obj.x1)/2, ry=Math.abs(obj.y2-obj.y1)/2;
+        minimapCtx.beginPath();
+        minimapCtx.ellipse((obj.x1+obj.x2)/2,(obj.y1+obj.y2)/2,rx,ry,0,0,Math.PI*2);
+        if(obj.fill) minimapCtx.fill(); minimapCtx.stroke(); break;
+      case 'line': case 'arrow':
+        minimapCtx.beginPath();minimapCtx.moveTo(obj.x1,obj.y1);minimapCtx.lineTo(obj.x2,obj.y2);minimapCtx.stroke(); break;
+      case 'text':
+        minimapCtx.font = `${(obj.fontSize||14)*0.6}px sans-serif`;
+        minimapCtx.fillText((obj.text||'').split('\n')[0], obj.x, obj.y+(obj.fontSize||14)*0.6); break;
+    }
+    minimapCtx.restore();
+  }
+  minimapCtx.restore();
+
+  // Viewport rectangle
+  const vpW = (wrap.clientWidth  / scale) * scaleX;
+  const vpH = (wrap.clientHeight / scale) * scaleY;
+  const vpX = ((-viewX / scale) - wb.minX) * scaleX;
+  const vpY = ((-viewY / scale) - wb.minY) * scaleY;
+
+  mmViewport.style.left   = Math.max(0, vpX) + 'px';
+  mmViewport.style.top    = Math.max(0, vpY) + 'px';
+  mmViewport.style.width  = Math.min(vpW, MM_W - Math.max(0,vpX)) + 'px';
+  mmViewport.style.height = Math.min(vpH, MM_H - Math.max(0,vpY)) + 'px';
+
+  // Fade when viewport covers most of the minimap (fully zoomed out)
+  const coverage = (vpW * vpH) / (MM_W * MM_H);
+  minimap.style.opacity = coverage > 0.85 ? '0.4' : '0.92';
+}
+
+// Click/drag on minimap to pan canvas
+function mmPanTo(e) {
+  const rect = minimap.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const wb = getWorldBounds();
+  const scaleX = MM_W / wb.w, scaleY = MM_H / wb.h;
+  // World coord at click center
+  const wx = wb.minX + mx / scaleX;
+  const wy = wb.minY + my / scaleY;
+  // Pan so that world point is centered in viewport
+  viewX = wrap.clientWidth  / 2 - wx * scale;
+  viewY = wrap.clientHeight / 2 - wy * scale;
+  drawGrid(); renderAll(); updateStickyTransform(); renderMinimap();
+}
+
+minimap.addEventListener('pointerdown', e => {
+  mmDragging = true;
+  minimap.setPointerCapture(e.pointerId);
+  mmPanTo(e);
+  e.stopPropagation();
+});
+minimap.addEventListener('pointermove', e => { if (mmDragging) mmPanTo(e); e.stopPropagation(); });
+minimap.addEventListener('pointerup',   e => { mmDragging = false; e.stopPropagation(); });
+
 // ── INIT ──
 window.addEventListener('resize', resizeCanvases);
 resizeCanvases();
 setTool('pen');
 updateZoomDisplay();
+renderMinimap();
 
 // Welcome hint
 setTimeout(() => {

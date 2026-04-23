@@ -274,11 +274,12 @@ nav {
   transition: opacity 0.18s ease, transform 0.18s ease;
   z-index: 200;
 }
-/* Invisible bridge fills the gap between button and dropdown so hover doesn't break */
-.toolbox-dropdown::before {
+/* Bridge on the parent keeps hover alive across the gap */
+.nav-toolbox::after,
+.hero-toolbox::after {
   content: '';
   position: absolute;
-  top: -12px;
+  top: 100%;
   left: 0;
   right: 0;
   height: 12px;
