@@ -1140,11 +1140,7 @@ function updateAll() {
         sub.textContent = 'No income entered — showing operating loss projection of $' + Math.abs(net * 12).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/yr.';
         sub.style.color = 'var(--red)';
       } else {
-        let b = totalIncome, mo = 0;
-        while (b > 0 && mo < 120) { b += net; mo++; }
-        sub.textContent = mo > 0
-          ? 'At current rate, balance reaches zero in ~' + mo + ' month' + (mo === 1 ? '' : 's') + '. Reduce expenses or increase income.'
-          : 'Immediate deficit — expenses exceed income from month one.';
+        sub.textContent = 'Deficit of $' + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/mo — expenses exceed income. Reduce spending or increase income.';
         sub.style.color = 'var(--red)';
       }
     }
@@ -1172,10 +1168,8 @@ function updateAll() {
         ri.style.color = 'var(--red)';
         ris.textContent = 'Operating loss of $' + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/mo with no income';
       } else {
-        // Has some income but in deficit — calculate months until zero
-        let b = totalIncome, mo = 0;
-        while (b > 0 && mo < 120) { b += net; mo++; }
-        ri.textContent = mo > 0 ? 'Zero in ~' + mo + ' mo' : 'Immediate Deficit';
+        // In deficit — no meaningful "runway" without a savings balance
+        ri.textContent = 'Deficit';
         ri.style.color = 'var(--red)';
         ris.textContent = 'Spending $' + Math.abs(net).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/mo more than earned';
       }
